@@ -441,84 +441,115 @@
               <h2 id="meetingTitle">Meeting Room</h2>
             </div>
             <div class="meeting-meta">
-              <div class="meeting-pill">
+              <div class="meeting-pill" id="tensionPill">
                 <span>Meeting Tension</span>
                 <strong id="tensionLabel">Low</strong>
               </div>
-              <div class="meeting-pill joined-pill">All stakeholders have joined the meeting.</div>
+              <div class="meeting-pill joined-pill" id="meetingStatusLabel">Room coming online</div>
             </div>
           </div>
 
-          <div class="meeting-layout">
+          <div class="meeting-room-shell">
             <section class="meeting-stage panel" aria-labelledby="stageTitle">
               <div class="stage-copy">
-                <p class="section-tag">Meeting Kick-Off</p>
+                <p class="section-tag" id="meetingStepTag">Meeting Kick-Off</p>
                 <h3 id="stageTitle">Everyone is looking at you to begin.</h3>
-                <p class="stage-subtitle">
+                <p class="stage-subtitle" id="meetingStageSubtitle">
                   Guide the discussion, frame the trade-offs, and use AI support when it helps.
                 </p>
               </div>
 
               <div class="meeting-room" id="meetingRoom">
-                <article class="stakeholder-card host-card">
-                  <div class="stakeholder-avatar host-avatar">
-                    <span id="hostInitial">S</span>
+                <div class="meeting-intro-overlay" id="meetingIntroOverlay" aria-live="polite">
+                  <p class="meeting-intro-line" id="meetingIntroPrimary">Connecting the room...</p>
+                  <p class="meeting-intro-subline" id="meetingIntroSecondary">
+                    Mission control is preparing the discussion space.
+                  </p>
+                </div>
+
+                <div class="meeting-grid-lines" aria-hidden="true"></div>
+
+                <article class="stakeholder-card host-card" id="hostCard">
+                  <div class="stakeholder-avatar-ring host-ring">
+                    <div class="stakeholder-avatar host-avatar">
+                      <span id="hostInitial">S</span>
+                    </div>
                   </div>
                   <div>
+                    <p class="stakeholder-kicker">You / Host</p>
                     <h4 id="hostNameLabel">Sarah</h4>
-                    <p>Business Analyst / Meeting Host</p>
+                    <p class="stakeholder-role-note">Leading the discussion</p>
                   </div>
+                  <span class="reaction-chip reaction-chip-host">Mission control active</span>
                 </article>
 
                 <div class="stakeholder-grid">
-                  <article class="stakeholder-card" data-stakeholder-card="tester">
-                    <img
-                      src="assets/tester-placeholder.svg"
-                      alt="Placeholder image for Tester"
-                      class="stakeholder-image"
-                    />
+                  <article class="stakeholder-card station-tester" data-stakeholder-card="tester">
+                    <div class="stakeholder-avatar-ring role-amber">
+                      <img
+                        src="assets/tester-placeholder.svg"
+                        alt="Placeholder image for Tester"
+                        class="stakeholder-image"
+                      />
+                    </div>
                     <div>
+                      <p class="stakeholder-kicker">Tester</p>
                       <h4>Tester</h4>
-                      <p>Worried, detail-focused</p>
+                      <p class="stakeholder-role-note">Concerned about defects</p>
                     </div>
                     <span class="reaction-chip" data-reaction="tester">Awaiting input</span>
                   </article>
 
-                  <article class="stakeholder-card" data-stakeholder-card="techLead">
-                    <img
-                      src="assets/tech-lead-placeholder.svg"
-                      alt="Placeholder image for Tech Lead"
-                      class="stakeholder-image"
-                    />
+                  <article class="stakeholder-card station-tech" data-stakeholder-card="techLead">
+                    <div class="stakeholder-avatar-ring role-blue">
+                      <img
+                        src="assets/tech-lead-placeholder.svg"
+                        alt="Placeholder image for Tech Lead"
+                        class="stakeholder-image"
+                      />
+                    </div>
                     <div>
+                      <p class="stakeholder-kicker">Tech Lead</p>
                       <h4>Tech Lead</h4>
-                      <p>Serious, cautious</p>
+                      <p class="stakeholder-role-note">Evaluating feasibility</p>
                     </div>
                     <span class="reaction-chip" data-reaction="techLead">Awaiting input</span>
                   </article>
 
-                  <article class="stakeholder-card" data-stakeholder-card="productOwner">
-                    <img
-                      src="assets/product-owner-placeholder.svg"
-                      alt="Placeholder image for Product Owner"
-                      class="stakeholder-image"
-                    />
+                  <article
+                    class="stakeholder-card station-product"
+                    data-stakeholder-card="productOwner"
+                  >
+                    <div class="stakeholder-avatar-ring role-orange">
+                      <img
+                        src="assets/product-owner-placeholder.svg"
+                        alt="Placeholder image for Product Owner"
+                        class="stakeholder-image"
+                      />
+                    </div>
                     <div>
+                      <p class="stakeholder-kicker">Product Owner</p>
                       <h4>Product Owner</h4>
-                      <p>Concerned, impatient</p>
+                      <p class="stakeholder-role-note">Focused on commitment</p>
                     </div>
                     <span class="reaction-chip" data-reaction="productOwner">Awaiting input</span>
                   </article>
 
-                  <article class="stakeholder-card" data-stakeholder-card="projectManager">
-                    <img
-                      src="assets/project-manager-placeholder.svg"
-                      alt="Placeholder image for Project Manager"
-                      class="stakeholder-image"
-                    />
+                  <article
+                    class="stakeholder-card station-project"
+                    data-stakeholder-card="projectManager"
+                  >
+                    <div class="stakeholder-avatar-ring role-green">
+                      <img
+                        src="assets/project-manager-placeholder.svg"
+                        alt="Placeholder image for Project Manager"
+                        class="stakeholder-image"
+                      />
+                    </div>
                     <div>
+                      <p class="stakeholder-kicker">Project Manager</p>
                       <h4>Project Manager</h4>
-                      <p>Neutral, coordination-focused</p>
+                      <p class="stakeholder-role-note">Coordinating alignment</p>
                     </div>
                     <span class="reaction-chip" data-reaction="projectManager">
                       Waiting for final alignment
@@ -528,38 +559,52 @@
               </div>
             </section>
 
-            <aside class="meeting-sidebar">
-              <article class="panel assistant-panel" id="assistantPanel">
-                <div class="panel-head">
-                  <div>
-                    <p class="section-tag">AI Assistant</p>
-                    <h3 id="assistantHeading">Suggested meeting structure</h3>
+            <div class="meeting-layout">
+              <div class="meeting-main-panels">
+                <article class="panel conversation-panel" id="conversationPanel">
+                  <div class="panel-head">
+                    <div>
+                      <p class="section-tag">Live Conversation</p>
+                      <h3 id="conversationTitle">Room feed</h3>
+                    </div>
                   </div>
-                  <button class="secondary-button" id="aiAssistButton" type="button">
-                    AI Assist
-                  </button>
-                </div>
-                <ul class="assistant-list" id="assistantContent">
-                  <li>State purpose</li>
-                  <li>Confirm who is represented in the room</li>
-                  <li>Define the problem</li>
-                  <li>Set the expected outcome</li>
-                </ul>
-              </article>
+                  <div class="conversation-feed" id="conversationFeed" aria-live="polite"></div>
+                </article>
 
-              <article class="panel notes-panel">
-                <div class="panel-head">
-                  <div>
-                    <p class="section-tag">AI Meeting Notes</p>
-                    <h3>Live notes</h3>
+                <section class="decision-panel panel" id="decisionPanel" aria-live="polite"></section>
+              </div>
+
+              <aside class="meeting-sidebar">
+                <article class="panel assistant-panel" id="assistantPanel">
+                  <div class="panel-head">
+                    <div>
+                      <p class="section-tag">AI Copilot</p>
+                      <h3 id="assistantHeading">Suggested meeting structure</h3>
+                    </div>
+                    <button class="secondary-button" id="aiAssistButton" type="button">
+                      AI Assist
+                    </button>
                   </div>
-                </div>
-                <ul id="notesList" class="notes-list" aria-live="polite"></ul>
-              </article>
-            </aside>
+                  <ul class="assistant-list" id="assistantContent">
+                    <li>State purpose</li>
+                    <li>Confirm who is represented in the room</li>
+                    <li>Define the problem</li>
+                    <li>Set the expected outcome</li>
+                  </ul>
+                </article>
+
+                <article class="panel notes-panel">
+                  <div class="panel-head">
+                    <div>
+                      <p class="section-tag">AI Meeting Notes</p>
+                      <h3>Live notes</h3>
+                    </div>
+                  </div>
+                  <ul id="notesList" class="notes-list" aria-live="polite"></ul>
+                </article>
+              </aside>
+            </div>
           </div>
-
-          <section class="decision-panel panel" id="decisionPanel" aria-live="polite"></section>
         </section>
 
         <section class="screen" id="outcomeScreen" aria-labelledby="outcomeTitle">
