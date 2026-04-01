@@ -75,7 +75,6 @@ const defaultState = () => ({
   currentRound: 0,
   stage: "kickoff",
   reviewedSources: [],
-  expandedSource: "",
   selections: {
     opening: null,
     problem: null,
@@ -477,17 +476,16 @@ function renderAnalysisSources() {
     const sourceId = card.dataset.sourceCard;
     const toggle = card.querySelector("[data-source-toggle]");
     const isReviewed = state.reviewedSources.includes(sourceId);
-    const isExpanded = state.expandedSource === sourceId;
 
     card.classList.toggle("is-reviewed", isReviewed);
-    card.classList.toggle("is-expanded", isExpanded);
-    toggle?.setAttribute("aria-expanded", String(isExpanded));
+    card.classList.toggle("is-expanded", isReviewed);
+    toggle?.setAttribute("aria-expanded", String(isReviewed));
   });
 }
 
 function renderAnalysisAction() {
   const reviewedCount = state.reviewedSources.length;
-  const canSummarise = reviewedCount >= 2;
+  const canSummarise = reviewedCount === 3;
 
   summariseButton.disabled = !canSummarise;
   summariseButton.setAttribute("aria-disabled", String(!canSummarise));
@@ -502,23 +500,16 @@ function renderAnalysisAction() {
 
   if (canSummarise) {
     analysisActionTitle.textContent =
-      "You've gathered enough signals. Generate a consolidated view?";
-    analysisActionHelper.textContent =
-      reviewedCount === 3
-        ? "All 3 sources reviewed. Generate the summary whenever you're ready."
-        : "You can still inspect the remaining signal before continuing.";
-    analysisSignalHint.textContent =
-      reviewedCount === 2
-        ? "2 sources reviewed. AI summarisation is now available."
-        : "All key signals reviewed. AI summarisation is ready.";
+      "You've reviewed every signal. Generate a consolidated view when you're ready.";
+    analysisActionHelper.textContent = "All key signals reviewed. Use AI to Summarise.";
+    analysisSignalHint.textContent = "All key signals reviewed. Use AI to Summarise.";
     return;
   }
 
   analysisActionTitle.textContent =
     "Investigate the signals before asking AI to consolidate the picture.";
-  analysisActionHelper.textContent = "Review at least 2 sources to continue.";
-  analysisSignalHint.textContent =
-    reviewedCount === 1 ? "Other signals may provide additional context." : "";
+  analysisActionHelper.textContent = "Review all 3 sources to continue.";
+  analysisSignalHint.textContent = "Other signals may provide additional context.";
 }
 
 function renderAnalysisView() {
@@ -532,7 +523,6 @@ function handleSourceReview(sourceId) {
     state.reviewedSources = [...state.reviewedSources, sourceId];
   }
 
-  state.expandedSource = state.expandedSource === sourceId ? "" : sourceId;
   renderAnalysisView();
 }
 
