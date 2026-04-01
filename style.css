@@ -83,6 +83,15 @@ button {
   cursor: pointer;
 }
 
+button:hover,
+button:hover *,
+.source-card:hover,
+.source-card:hover *,
+.source-card-toggle:hover,
+.source-card-toggle:hover * {
+  cursor: pointer !important;
+}
+
 .page-shell {
   width: min(1440px, calc(100% - 64px));
   margin: 0 auto;
@@ -636,6 +645,7 @@ input[type="text"]::placeholder {
 .primary-button,
 .secondary-button,
 .option-button {
+  cursor: pointer;
   border: 0;
   border-radius: 18px;
   padding: 14px 18px;
@@ -995,6 +1005,7 @@ input[type="text"]::placeholder {
   --source-chip-bg: rgba(127, 209, 194, 0.12);
   --source-chip-border: rgba(127, 209, 194, 0.18);
   --source-chip-color: var(--accent-strong);
+  cursor: pointer;
   padding: 0;
   transition:
     transform 220ms ease,
@@ -1004,6 +1015,7 @@ input[type="text"]::placeholder {
 }
 
 .source-card-toggle {
+  cursor: pointer;
   width: 100%;
   border: 0;
   padding: 22px;

@@ -1011,6 +1011,14 @@ analysisSourceCards.forEach((card) => {
   toggle?.addEventListener("click", () => {
     handleSourceReview(sourceId);
   });
+
+  card.addEventListener("click", (event) => {
+    if (event.target.closest("[data-source-toggle]")) {
+      return;
+    }
+
+    handleSourceReview(sourceId);
+  });
 });
 
 summariseButton.addEventListener("click", () => {
