@@ -1945,12 +1945,12 @@ input[type="text"]::placeholder {
 }
 
 .host-card {
-  --station-transform: translateX(-50%);
+  --station-transform: translate(-50%, -50%);
   position: absolute;
-  top: 120px;
+  top: 44%;
   left: 50%;
-  z-index: 1;
-  width: min(100%, 320px);
+  z-index: 3;
+  width: min(100%, 336px);
   margin: 0;
   display: grid;
   justify-items: center;
