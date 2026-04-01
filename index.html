@@ -13,13 +13,23 @@
           <p class="eyebrow">AI-Augmented BA Simulation</p>
           <h1>The Critical Meeting</h1>
         </div>
-        <div class="status-pill" id="progressLabel">Step 1 of 4</div>
+        <div class="status-pill" id="progressLabel">
+          <span class="phase-icon" aria-hidden="true">&#128752;&#65039;</span>
+          Mission Phase 1: Briefing
+        </div>
       </header>
 
       <main class="app">
         <section class="screen screen-active" id="landingScreen" aria-labelledby="landingTitle">
+          <div class="landing-space" aria-hidden="true">
+            <div class="landing-stars"></div>
+            <div class="landing-particles"></div>
+          </div>
           <div class="hero-grid">
             <div class="hero-copy">
+              <div class="hero-astronaut" aria-hidden="true">
+                <img src="Astronaut in high-tech space cockpit.png" alt="" />
+              </div>
               <p class="section-tag">Landing Page</p>
               <h2 id="landingTitle">The Critical Meeting</h2>
               <p class="hero-subtitle">
@@ -40,6 +50,10 @@
                   <li>Make a recommendation that impacts the team</li>
                 </ul>
               </section>
+              <p class="wow-line">
+                The system is already forming a view.
+                <span>But the final decision depends on you.</span>
+              </p>
 
               <form class="name-panel" id="nameForm">
                 <label for="playerName">Enter your name</label>
@@ -52,7 +66,7 @@
                   autocomplete="name"
                 />
                 <p class="identity-shift" id="identityShift" aria-live="polite"></p>
-                <button class="primary-button" type="submit">
+                <button class="primary-button hero-cta" type="submit">
                   <span class="cta-icon" aria-hidden="true">&#9654;</span>
                   Enter the Meeting
                 </button>
@@ -62,10 +76,10 @@
             <aside class="ai-preview-panel panel">
               <div class="panel-head">
                 <div>
-                  <p class="section-tag">BA Support</p>
-                  <h3>BA's AI Assistant</h3>
+                  <p class="section-tag">Mission System</p>
+                  <h3>System Intelligence</h3>
                 </div>
-                <span class="live-indicator">Active</span>
+                <span class="live-indicator">Signal Active</span>
               </div>
               <div class="insight-console" aria-live="polite">
                 <article class="insight-step active" data-insight-step>
@@ -73,11 +87,19 @@
                   <p class="insight-primary">Analysing inputs...</p>
                   <p class="insight-secondary">Patterns detected</p>
                 </article>
+                <div class="signal-divider" aria-hidden="true">
+                  <span>&#9619;&#9619;&#9619; processing &#9619;&#9619;&#9619;</span>
+                  <span>scanning signals...</span>
+                </div>
                 <article class="insight-step" data-insight-step>
                   <p class="insight-index">Step 2</p>
                   <p class="insight-primary">Signals emerging...</p>
                   <p class="insight-secondary">Stakeholder alignment unclear</p>
                 </article>
+                <div class="signal-divider" aria-hidden="true">
+                  <span>&#9619;&#9619;&#9619; processing &#9619;&#9619;&#9619;</span>
+                  <span>scanning signals...</span>
+                </div>
                 <article class="insight-step" data-insight-step>
                   <p class="insight-index">Step 3</p>
                   <p class="insight-primary">Preparing context...</p>

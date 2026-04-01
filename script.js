@@ -45,11 +45,11 @@ const reactionChips = {
   projectManager: document.querySelector('[data-reaction="projectManager"]'),
 };
 
-const stepLabels = {
-  landing: "Step 1 of 4",
-  analysis: "Step 2 of 4",
-  meeting: "Step 3 of 4",
-  outcome: "Step 4 of 4",
+const missionLabels = {
+  landing: "Mission Phase 1: Briefing",
+  analysis: "Mission Phase 2: Signal Analysis",
+  meeting: "Mission Phase 3: Live Meeting",
+  outcome: "Mission Phase 4: Debrief",
 };
 
 const defaultState = () => ({
@@ -80,6 +80,13 @@ const defaultState = () => ({
 });
 
 let state = defaultState();
+
+function renderProgressLabel(screenKey) {
+  progressLabel.innerHTML = `
+    <span class="phase-icon" aria-hidden="true">&#128752;&#65039;</span>
+    ${missionLabels[screenKey]}
+  `;
+}
 
 const kickoffSequence = [
   {
@@ -387,7 +394,7 @@ function showScreen(screenKey) {
   Object.entries(screens).forEach(([key, screen]) => {
     screen.classList.toggle("screen-active", key === screenKey);
   });
-  progressLabel.textContent = stepLabels[screenKey];
+  renderProgressLabel(screenKey);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -885,6 +892,28 @@ function cycleSystemInsights() {
   }, 3600);
 }
 
+function initialiseLandingParallax() {
+  const landingScreen = screens.landing;
+
+  if (!landingScreen || !window.matchMedia("(pointer: fine)").matches) {
+    return;
+  }
+
+  landingScreen.addEventListener("mousemove", (event) => {
+    const bounds = landingScreen.getBoundingClientRect();
+    const offsetX = ((event.clientX - bounds.left) / bounds.width - 0.5) * 16;
+    const offsetY = ((event.clientY - bounds.top) / bounds.height - 0.5) * 16;
+
+    landingScreen.style.setProperty("--parallax-x", `${offsetX.toFixed(2)}px`);
+    landingScreen.style.setProperty("--parallax-y", `${offsetY.toFixed(2)}px`);
+  });
+
+  landingScreen.addEventListener("mouseleave", () => {
+    landingScreen.style.setProperty("--parallax-x", "0px");
+    landingScreen.style.setProperty("--parallax-y", "0px");
+  });
+}
+
 playerNameInput.addEventListener("input", () => {
   updateIdentityShift();
 });
@@ -956,3 +985,5 @@ updateTension();
 updateHostLabels();
 updateIdentityShift();
 cycleSystemInsights();
+renderProgressLabel("landing");
+initialiseLandingParallax();
