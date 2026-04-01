@@ -1752,9 +1752,28 @@ input[type="text"]::placeholder {
   color: var(--accent-strong);
 }
 
+#meetingScreen {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100vh - 180px);
+  padding: 28px;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(127, 209, 194, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(6, 16, 22, 0.88), rgba(6, 16, 22, 0.94));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 26px 68px rgba(0, 0, 0, 0.28);
+}
+
+#meetingScreen > * {
+  position: relative;
+  z-index: 1;
+}
+
 .meeting-room-shell {
   display: grid;
-  gap: 22px;
+  gap: 26px;
 }
 
 .meeting-pill {
@@ -1783,44 +1802,99 @@ input[type="text"]::placeholder {
 .meeting-layout {
   display: grid;
   gap: 22px;
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.78fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
 }
 
 .meeting-stage {
   position: relative;
   overflow: hidden;
-  padding: 28px;
+  min-height: 860px;
+  padding: 0;
   background:
-    radial-gradient(circle at 50% 16%, rgba(127, 209, 194, 0.12), transparent 36%),
-    linear-gradient(180deg, rgba(240, 189, 117, 0.05), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 54%),
-    var(--panel);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 30%),
+    linear-gradient(180deg, rgba(10, 23, 31, 0.9), rgba(10, 23, 31, 0.82)),
+    rgba(10, 23, 31, 0.88);
+  isolation: isolate;
+}
+
+.meeting-stage::before {
+  content: "";
+  position: absolute;
+  inset: 84px 18px 18px;
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(6, 16, 22, 0.12), rgba(6, 16, 22, 0.24)),
+    url("Meeting room background.png") center 55% / contain no-repeat;
+  opacity: 0.98;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.meeting-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(127, 209, 194, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(6, 16, 22, 0.08), transparent 24%, rgba(6, 16, 22, 0.32) 100%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .stage-copy {
   position: relative;
   z-index: 2;
-  margin-bottom: 24px;
+  margin-bottom: 0;
+  width: min(360px, calc(100% - 420px));
+  padding: 28px 0 0 30px;
+}
+
+.stage-copy h3 {
+  margin: 0 0 10px;
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+.meeting-stage .stage-subtitle {
+  max-width: 34ch;
+  margin: 0;
+  color: rgba(237, 244, 247, 0.78);
+  font-size: 1rem;
+  line-height: 1.62;
+}
+
+.meeting-copilot-panel {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  z-index: 2;
+  width: min(340px, calc(100% - 56px));
+  padding: 22px 24px;
+  backdrop-filter: blur(16px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 48%),
+    rgba(11, 28, 35, 0.74);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .meeting-room {
   position: relative;
-  display: grid;
-  gap: 24px;
-  padding: 18px 8px 10px;
+  min-height: 780px;
+  padding: 126px 28px 28px;
   isolation: isolate;
 }
 
 .meeting-grid-lines {
   position: absolute;
-  inset: 20px 12px 8px;
-  border-radius: 32px;
-  opacity: 0.5;
+  inset: 86px 18px 18px;
+  border-radius: 30px;
+  opacity: 0.22;
   background:
     radial-gradient(circle at center, rgba(127, 209, 194, 0.1), transparent 52%),
     linear-gradient(rgba(127, 209, 194, 0.07) 1px, transparent 1px),
     linear-gradient(90deg, rgba(127, 209, 194, 0.05) 1px, transparent 1px);
-  background-size: auto, 100% 30px, 30px 100%;
+  background-size: auto, 100% 44px, 44px 100%;
   mask-image: radial-gradient(circle at center, black 44%, transparent 92%);
   pointer-events: none;
   z-index: 0;
@@ -1828,7 +1902,7 @@ input[type="text"]::placeholder {
 
 .meeting-intro-overlay {
   position: absolute;
-  inset: 0;
+  inset: 84px 18px 18px;
   z-index: 4;
   display: grid;
   place-content: center;
@@ -1836,7 +1910,7 @@ input[type="text"]::placeholder {
   text-align: center;
   padding: 24px;
   border-radius: 30px;
-  background: radial-gradient(circle, rgba(7, 18, 24, 0.84), rgba(7, 18, 24, 0.52));
+  background: radial-gradient(circle, rgba(7, 18, 24, 0.82), rgba(7, 18, 24, 0.48));
   opacity: 0;
   pointer-events: none;
   transition: opacity 320ms ease;
@@ -1860,20 +1934,24 @@ input[type="text"]::placeholder {
 }
 
 .meeting-room .stakeholder-card {
+  --station-transform: translateX(0);
   opacity: 0;
-  transform: translateY(10px) scale(0.98);
+  transform: var(--station-transform) translateY(10px) scale(0.98);
 }
 
 .meeting-room .stakeholder-card.is-present {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: var(--station-transform) translateY(0) scale(1);
 }
 
 .host-card {
-  position: relative;
+  --station-transform: translateX(-50%);
+  position: absolute;
+  top: 120px;
+  left: 50%;
   z-index: 1;
-  width: min(100%, 360px);
-  margin: 0 auto;
+  width: min(100%, 320px);
+  margin: 0;
   display: grid;
   justify-items: center;
   text-align: center;
@@ -1883,16 +1961,23 @@ input[type="text"]::placeholder {
   border-radius: 26px;
   border: 1px solid rgba(127, 209, 194, 0.18);
   background:
-    linear-gradient(180deg, rgba(127, 209, 194, 0.12), transparent 52%),
-    rgba(127, 209, 194, 0.08);
+    linear-gradient(180deg, rgba(127, 209, 194, 0.18), transparent 58%),
+    rgba(11, 28, 35, 0.32);
+  backdrop-filter: blur(18px);
+  transform: var(--station-transform);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
 }
 
 .stakeholder-grid {
-  position: relative;
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 30px;
   z-index: 1;
   display: grid;
   gap: 18px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
 }
 
 .stakeholder-card {
@@ -1900,14 +1985,15 @@ input[type="text"]::placeholder {
   display: grid;
   justify-items: center;
   text-align: center;
-  gap: 14px;
+  gap: 12px;
   align-content: start;
-  padding: 18px 18px 16px;
+  padding: 16px 14px 14px;
   border-radius: 26px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 48%),
-    rgba(255, 255, 255, 0.04);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 48%),
+    rgba(11, 28, 35, 0.3);
+  backdrop-filter: blur(12px);
   transition:
     transform 220ms ease,
     opacity 240ms ease,
@@ -1916,14 +2002,14 @@ input[type="text"]::placeholder {
 }
 
 .stakeholder-card.is-speaking {
-  transform: translateY(-4px);
+  transform: var(--station-transform) translateY(-4px) scale(1);
   border-color: rgba(127, 209, 194, 0.55);
   box-shadow: 0 18px 34px rgba(127, 209, 194, 0.14);
 }
 
 .stakeholder-card h4 {
   margin: 0 0 6px;
-  font-size: 1.05rem;
+  font-size: 1.28rem;
 }
 
 .stakeholder-card p {
@@ -1940,16 +2026,16 @@ input[type="text"]::placeholder {
 }
 
 .stakeholder-role-note {
-  font-size: 0.92rem;
-  line-height: 1.45;
+  font-size: 0.98rem;
+  line-height: 1.5;
 }
 
 .stakeholder-avatar-ring {
   --ring-glow: rgba(127, 209, 194, 0.2);
   position: relative;
-  width: 136px;
-  height: 136px;
-  padding: 8px;
+  width: 116px;
+  height: 116px;
+  padding: 6px;
   border-radius: 50%;
   background:
     radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 62%),
@@ -1988,6 +2074,7 @@ input[type="text"]::placeholder {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.04);
@@ -2034,8 +2121,9 @@ input[type="text"]::placeholder {
 .notes-panel,
 .decision-panel {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 50%),
-    rgba(11, 29, 37, 0.94);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 50%),
+    rgba(11, 29, 37, 0.82);
+  backdrop-filter: blur(18px);
 }
 
 .conversation-feed {
@@ -2528,12 +2616,34 @@ input[type="text"]::placeholder {
     padding: 28px;
   }
 
+  .meeting-stage {
+    min-height: 1080px;
+  }
+
+  .meeting-stage::before {
+    inset: 112px 18px 18px;
+    background-position: center 54%;
+    background-size: cover;
+  }
+
+  .meeting-room {
+    min-height: 980px;
+    padding: 134px 24px 24px;
+  }
+
   .summary-side-card {
     padding: 22px;
   }
 
   .host-card {
-    width: min(100%, 420px);
+    width: min(100%, 360px);
+  }
+
+  .stakeholder-grid {
+    left: 24px;
+    right: 24px;
+    bottom: 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .conversation-feed {
@@ -2625,11 +2735,46 @@ input[type="text"]::placeholder {
   }
 
   .meeting-stage {
-    padding: 24px;
+    min-height: 0;
+    padding: 22px;
+  }
+
+  .meeting-stage::before {
+    inset: 126px 12px 12px;
+    background-position: center top;
+    background-size: cover;
+    opacity: 0.28;
+  }
+
+  .meeting-stage::after {
+    background:
+      linear-gradient(180deg, rgba(6, 16, 22, 0.08), rgba(6, 16, 22, 0.46)),
+      radial-gradient(circle at 50% 24%, rgba(127, 209, 194, 0.12), transparent 34%);
+  }
+
+  .stage-copy {
+    width: 100%;
+    padding: 0;
+  }
+
+  .meeting-copilot-panel {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    margin: 20px 0 22px;
   }
 
   .meeting-room {
-    padding-inline: 0;
+    min-height: 0;
+    display: grid;
+    gap: 24px;
+    padding: 0;
+  }
+
+  .meeting-grid-lines,
+  .meeting-intro-overlay {
+    inset: 0;
   }
 
   .stakeholder-avatar-ring {
@@ -2681,7 +2826,12 @@ input[type="text"]::placeholder {
   }
 
   .host-card {
+    --station-transform: translateX(0);
+    position: relative;
+    top: auto;
+    left: auto;
     width: 100%;
+    transform: none;
   }
 
   .stakeholder-avatar-ring {
@@ -2709,6 +2859,13 @@ input[type="text"]::placeholder {
 
   .host-card {
     grid-template-columns: 1fr;
+  }
+
+  .stakeholder-grid {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
   }
 
   .meeting-pill,
