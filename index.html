@@ -120,44 +120,137 @@
         <section class="screen" id="analysisScreen" aria-labelledby="analysisTitle">
           <div class="screen-header">
             <div>
-              <p class="section-tag">Screen 2</p>
-              <h2 id="analysisTitle">Situation Analysis</h2>
+              <p class="section-tag">Mission Phase 2</p>
+              <h2 id="analysisTitle">Signal Analysis</h2>
             </div>
-            <p class="screen-intro">
-              Before the meeting, you review information from multiple sources to understand
-              the issue.
-            </p>
+            <p class="screen-intro">Investigate the signals before making sense of them.</p>
           </div>
 
           <div class="sources-grid">
-            <article class="source-card panel">
-              <p class="card-label">Source 1</p>
-              <h3>Defect Report</h3>
-              <p>QA has logged several defects, including items marked high severity.</p>
+            <article class="source-card source-card-defect panel" data-source-card="defect">
+              <button
+                class="source-card-toggle"
+                type="button"
+                data-source-toggle="defect"
+                aria-expanded="false"
+              >
+                <div class="source-card-top">
+                  <span class="source-icon" aria-hidden="true">&#9888;</span>
+                  <div class="source-card-copy">
+                    <p class="card-label">Source 1</p>
+                    <h3>Defect Report</h3>
+                  </div>
+                  <span class="source-review-chip">Reviewed</span>
+                </div>
+                <p class="source-hint">Structured risk signal from QA and system validation.</p>
+              </button>
+              <div class="source-detail">
+                <p class="detail-kicker">DEFECT REPORT</p>
+                <div class="detail-metrics">
+                  <div class="detail-metric">
+                    <span>Severity</span>
+                    <strong>High</strong>
+                  </div>
+                  <div class="detail-metric">
+                    <span>Total defects</span>
+                    <strong>3</strong>
+                  </div>
+                  <div class="detail-metric">
+                    <span>Customer impact</span>
+                    <strong>Yes</strong>
+                  </div>
+                </div>
+                <ul class="source-detail-list">
+                  <li>Payment failure scenario</li>
+                  <li>Incorrect data display</li>
+                  <li>Timeout under load</li>
+                </ul>
+              </div>
             </article>
-            <article class="source-card panel">
-              <p class="card-label">Source 2</p>
-              <h3>Team Chat</h3>
-              <p>
-                Technology team members are discussing possible customer impact and release
-                concerns.
-              </p>
+            <article class="source-card source-card-chat panel" data-source-card="chat">
+              <button
+                class="source-card-toggle"
+                type="button"
+                data-source-toggle="chat"
+                aria-expanded="false"
+              >
+                <div class="source-card-top">
+                  <span class="source-icon" aria-hidden="true">&#128172;</span>
+                  <div class="source-card-copy">
+                    <p class="card-label">Source 2</p>
+                    <h3>Team Chat</h3>
+                  </div>
+                  <span class="source-review-chip">Reviewed</span>
+                </div>
+                <p class="source-hint">Conversational signal from the technology team.</p>
+              </button>
+              <div class="source-detail">
+                <p class="detail-kicker">TEAM CHAT</p>
+                <div class="chat-thread">
+                  <article class="chat-bubble chat-bubble-left">
+                    <span class="chat-author">Dev</span>
+                    <p>These defects might affect customers if we release now.</p>
+                  </article>
+                  <article class="chat-bubble chat-bubble-right">
+                    <span class="chat-author">Tester</span>
+                    <p>Agree, especially the payment issue.</p>
+                  </article>
+                  <article class="chat-bubble chat-bubble-left">
+                    <span class="chat-author">Dev</span>
+                    <p>We may need more time to fix.</p>
+                  </article>
+                </div>
+              </div>
             </article>
-            <article class="source-card panel">
-              <p class="card-label">Source 3</p>
-              <h3>Stakeholder Emails</h3>
-              <p>
-                Delivery expectations and release timing have already been communicated.
-              </p>
+            <article class="source-card source-card-email panel" data-source-card="email">
+              <button
+                class="source-card-toggle"
+                type="button"
+                data-source-toggle="email"
+                aria-expanded="false"
+              >
+                <div class="source-card-top">
+                  <span class="source-icon" aria-hidden="true">&#9993;</span>
+                  <div class="source-card-copy">
+                    <p class="card-label">Source 3</p>
+                    <h3>Stakeholder Emails</h3>
+                  </div>
+                  <span class="source-review-chip">Reviewed</span>
+                </div>
+                <p class="source-hint">Formal pressure signal tied to release commitment.</p>
+              </button>
+              <div class="source-detail">
+                <p class="detail-kicker">STAKEHOLDER EMAIL</p>
+                <article class="email-sheet">
+                  <div class="email-meta-row">
+                    <span>From:</span>
+                    <strong>Product Owner</strong>
+                  </div>
+                  <div class="email-meta-row">
+                    <span>Subject:</span>
+                    <strong>Release Commitment</strong>
+                  </div>
+                  <div class="email-body-copy">
+                    <p>We have already communicated the release timeline.</p>
+                    <p>Any delay will impact stakeholders and expectations.</p>
+                  </div>
+                </article>
+              </div>
             </article>
           </div>
+          <p class="analysis-signal-hint" id="analysisSignalHint" aria-live="polite"></p>
 
           <section class="analysis-actions panel">
-            <div>
+            <div class="analysis-action-copy">
               <p class="section-tag">AI Action</p>
-              <h3>Use AI to summarise the key issues across these sources.</h3>
+              <h3 id="analysisActionTitle">
+                Investigate the signals before asking AI to consolidate the picture.
+              </h3>
+              <p class="analysis-action-helper" id="analysisActionHelper">
+                Review at least 2 sources to continue.
+              </p>
             </div>
-            <button class="primary-button" id="summariseButton" type="button">
+            <button class="primary-button" id="summariseButton" type="button" disabled>
               Use AI to Summarise
             </button>
           </section>

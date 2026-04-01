@@ -14,6 +14,9 @@ const hostInitial = document.getElementById("hostInitial");
 const situationNarrative = document.getElementById("situationNarrative");
 const summariseButton = document.getElementById("summariseButton");
 const summaryPanel = document.getElementById("summaryPanel");
+const analysisActionTitle = document.getElementById("analysisActionTitle");
+const analysisActionHelper = document.getElementById("analysisActionHelper");
+const analysisSignalHint = document.getElementById("analysisSignalHint");
 const enterMeetingButton = document.getElementById("enterMeetingButton");
 const decisionPanel = document.getElementById("decisionPanel");
 const assistantHeading = document.getElementById("assistantHeading");
@@ -30,6 +33,7 @@ const tryAgainButton = document.getElementById("tryAgainButton");
 const returnHomeButton = document.getElementById("returnHomeButton");
 const optionTemplate = document.getElementById("optionTemplate");
 const insightSteps = Array.from(document.querySelectorAll("[data-insight-step]"));
+const analysisSourceCards = Array.from(document.querySelectorAll("[data-source-card]"));
 
 const stakeholderCards = {
   tester: document.querySelector('[data-stakeholder-card="tester"]'),
@@ -70,6 +74,8 @@ const defaultState = () => ({
   speakerQueue: [],
   currentRound: 0,
   stage: "kickoff",
+  reviewedSources: [],
+  expandedSource: "",
   selections: {
     opening: null,
     problem: null,
@@ -466,6 +472,70 @@ function updateIdentityShift() {
   identityShift.classList.add("is-visible");
 }
 
+function renderAnalysisSources() {
+  analysisSourceCards.forEach((card) => {
+    const sourceId = card.dataset.sourceCard;
+    const toggle = card.querySelector("[data-source-toggle]");
+    const isReviewed = state.reviewedSources.includes(sourceId);
+    const isExpanded = state.expandedSource === sourceId;
+
+    card.classList.toggle("is-reviewed", isReviewed);
+    card.classList.toggle("is-expanded", isExpanded);
+    toggle?.setAttribute("aria-expanded", String(isExpanded));
+  });
+}
+
+function renderAnalysisAction() {
+  const reviewedCount = state.reviewedSources.length;
+  const canSummarise = reviewedCount >= 2;
+
+  summariseButton.disabled = !canSummarise;
+  summariseButton.setAttribute("aria-disabled", String(!canSummarise));
+
+  if (state.aiSummaryShown) {
+    analysisActionTitle.textContent = "AI Summary generated. Review the consolidated view below.";
+    analysisActionHelper.textContent =
+      "You can still inspect the source signals before entering the meeting room.";
+    analysisSignalHint.textContent = "";
+    return;
+  }
+
+  if (canSummarise) {
+    analysisActionTitle.textContent =
+      "You've gathered enough signals. Generate a consolidated view?";
+    analysisActionHelper.textContent =
+      reviewedCount === 3
+        ? "All 3 sources reviewed. Generate the summary whenever you're ready."
+        : "You can still inspect the remaining signal before continuing.";
+    analysisSignalHint.textContent =
+      reviewedCount === 2
+        ? "2 sources reviewed. AI summarisation is now available."
+        : "All key signals reviewed. AI summarisation is ready.";
+    return;
+  }
+
+  analysisActionTitle.textContent =
+    "Investigate the signals before asking AI to consolidate the picture.";
+  analysisActionHelper.textContent = "Review at least 2 sources to continue.";
+  analysisSignalHint.textContent =
+    reviewedCount === 1 ? "Other signals may provide additional context." : "";
+}
+
+function renderAnalysisView() {
+  renderAnalysisSources();
+  renderAnalysisAction();
+  summaryPanel.classList.toggle("hidden", !state.aiSummaryShown);
+}
+
+function handleSourceReview(sourceId) {
+  if (!state.reviewedSources.includes(sourceId)) {
+    state.reviewedSources = [...state.reviewedSources, sourceId];
+  }
+
+  state.expandedSource = state.expandedSource === sourceId ? "" : sourceId;
+  renderAnalysisView();
+}
+
 function addNotes(noteLines) {
   noteLines.forEach((line) => {
     if (!state.notes.includes(line)) {
@@ -849,6 +919,7 @@ function resetSimulation({ destination = "landing", preserveName = false } = {})
   highlightSpeaker("");
   updateHostLabels();
   updateIdentityShift();
+  renderAnalysisView();
   if (destination === "landing") {
     showScreen("landing");
   } else {
@@ -922,12 +993,27 @@ nameForm.addEventListener("submit", (event) => {
   event.preventDefault();
   state.playerName = playerNameInput.value.trim() || "Sarah";
   updateHostLabels();
+  renderAnalysisView();
   showScreen("analysis");
 });
 
+analysisSourceCards.forEach((card) => {
+  const sourceId = card.dataset.sourceCard;
+  const toggle = card.querySelector("[data-source-toggle]");
+
+  toggle?.addEventListener("click", () => {
+    handleSourceReview(sourceId);
+  });
+});
+
 summariseButton.addEventListener("click", () => {
+  if (summariseButton.disabled) {
+    return;
+  }
+
   state.aiSummaryShown = true;
-  summaryPanel.classList.remove("hidden");
+  renderAnalysisView();
+  summaryPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 enterMeetingButton.addEventListener("click", () => {
@@ -984,6 +1070,7 @@ renderAssistant("Suggested meeting structure", assistantKickoff);
 updateTension();
 updateHostLabels();
 updateIdentityShift();
+renderAnalysisView();
 cycleSystemInsights();
 renderProgressLabel("landing");
 initialiseLandingParallax();
