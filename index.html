@@ -118,226 +118,326 @@
         </section>
 
         <section class="screen" id="analysisScreen" aria-labelledby="analysisTitle">
-          <div class="screen-header">
-            <div>
-              <p class="section-tag">Mission Phase 2</p>
-              <div class="analysis-title-row">
-                <h2 id="analysisTitle">Signal Analysis</h2>
-                <span class="analysis-progress-pill" id="analysisProgressPill">0/3 reviewed</span>
+          <div class="screen-header analysis-screen-header">
+            <div class="analysis-header-main">
+              <div>
+                <p class="section-tag" id="analysisPhaseTag">Mission Phase 2</p>
+                <div class="analysis-title-row">
+                  <h2 id="analysisTitle">Signal Analysis</h2>
+                  <span class="analysis-progress-pill" id="analysisProgressPill">
+                    0/3 reviewed
+                  </span>
+                </div>
               </div>
+              <span class="analysis-state-badge hidden" id="analysisStateBadge">
+                Consolidated View Ready
+              </span>
             </div>
-            <p class="screen-intro">Investigate the signals before making sense of them.</p>
+            <p class="screen-intro" id="analysisIntro">
+              Review the signals before making a decision.
+            </p>
           </div>
 
-          <div class="sources-grid">
-            <article
-              class="source-card source-card-defect panel"
-              data-source-card="defect"
-              style="cursor: pointer;"
-            >
-              <button
-                class="source-card-toggle"
-                type="button"
-                data-source-toggle="defect"
-                aria-expanded="false"
+          <div id="analysisDiscoveryView">
+            <div class="sources-grid">
+              <article
+                class="source-card source-card-defect panel"
+                data-source-card="defect"
                 style="cursor: pointer;"
               >
-                <div class="source-card-top">
-                  <span class="source-icon" aria-hidden="true">&#9888;</span>
-                  <div class="source-card-copy">
-                    <p class="card-label">Source 1</p>
-                    <h3>Defect Report</h3>
+                <button
+                  class="source-card-toggle"
+                  type="button"
+                  data-source-toggle="defect"
+                  aria-expanded="false"
+                  style="cursor: pointer;"
+                >
+                  <div class="source-card-top">
+                    <span class="source-icon" aria-hidden="true">&#9888;</span>
+                    <div class="source-card-copy">
+                      <p class="card-label">Source 1</p>
+                      <h3>Defect Report</h3>
+                    </div>
+                    <span class="source-review-chip">Reviewed</span>
                   </div>
-                  <span class="source-review-chip">Reviewed</span>
+                  <p class="source-hint">Structured risk signal from QA and system validation.</p>
+                </button>
+                <div class="source-detail">
+                  <p class="detail-kicker">DEFECT REPORT</p>
+                  <div class="detail-metrics">
+                    <div class="detail-metric">
+                      <span>Severity</span>
+                      <strong>High</strong>
+                    </div>
+                    <div class="detail-metric">
+                      <span>Total defects</span>
+                      <strong>3</strong>
+                    </div>
+                    <div class="detail-metric">
+                      <span>Customer impact</span>
+                      <strong>Yes</strong>
+                    </div>
+                  </div>
+                  <ul class="source-detail-list">
+                    <li>Payment failure scenario</li>
+                    <li>Incorrect data display</li>
+                    <li>Timeout under load</li>
+                  </ul>
                 </div>
-                <p class="source-hint">Structured risk signal from QA and system validation.</p>
-              </button>
-              <div class="source-detail">
-                <p class="detail-kicker">DEFECT REPORT</p>
-                <div class="detail-metrics">
-                  <div class="detail-metric">
-                    <span>Severity</span>
-                    <strong>High</strong>
-                  </div>
-                  <div class="detail-metric">
-                    <span>Total defects</span>
-                    <strong>3</strong>
-                  </div>
-                  <div class="detail-metric">
-                    <span>Customer impact</span>
-                    <strong>Yes</strong>
-                  </div>
-                </div>
-                <ul class="source-detail-list">
-                  <li>Payment failure scenario</li>
-                  <li>Incorrect data display</li>
-                  <li>Timeout under load</li>
-                </ul>
-              </div>
-            </article>
-            <article
-              class="source-card source-card-chat panel"
-              data-source-card="chat"
-              style="cursor: pointer;"
-            >
-              <button
-                class="source-card-toggle"
-                type="button"
-                data-source-toggle="chat"
-                aria-expanded="false"
+              </article>
+              <article
+                class="source-card source-card-chat panel"
+                data-source-card="chat"
                 style="cursor: pointer;"
               >
-                <div class="source-card-top">
-                  <span class="source-icon" aria-hidden="true">&#128172;</span>
-                  <div class="source-card-copy">
-                    <p class="card-label">Source 2</p>
-                    <h3>Team Chat</h3>
+                <button
+                  class="source-card-toggle"
+                  type="button"
+                  data-source-toggle="chat"
+                  aria-expanded="false"
+                  style="cursor: pointer;"
+                >
+                  <div class="source-card-top">
+                    <span class="source-icon" aria-hidden="true">&#128172;</span>
+                    <div class="source-card-copy">
+                      <p class="card-label">Source 2</p>
+                      <h3>Team Chat</h3>
+                    </div>
+                    <span class="source-review-chip">Reviewed</span>
                   </div>
-                  <span class="source-review-chip">Reviewed</span>
+                  <p class="source-hint">Conversational signal from the technology team.</p>
+                </button>
+                <div class="source-detail">
+                  <p class="detail-kicker">TEAM CHAT</p>
+                  <div class="chat-thread">
+                    <article class="chat-bubble chat-bubble-left">
+                      <span class="chat-author">Dev</span>
+                      <p>These defects might affect customers if we release now.</p>
+                    </article>
+                    <article class="chat-bubble chat-bubble-right">
+                      <span class="chat-author">Tester</span>
+                      <p>Agree, especially the payment issue.</p>
+                    </article>
+                    <article class="chat-bubble chat-bubble-left">
+                      <span class="chat-author">Dev</span>
+                      <p>We may need more time to fix.</p>
+                    </article>
+                  </div>
                 </div>
-                <p class="source-hint">Conversational signal from the technology team.</p>
-              </button>
-              <div class="source-detail">
-                <p class="detail-kicker">TEAM CHAT</p>
-                <div class="chat-thread">
-                  <article class="chat-bubble chat-bubble-left">
-                    <span class="chat-author">Dev</span>
-                    <p>These defects might affect customers if we release now.</p>
-                  </article>
-                  <article class="chat-bubble chat-bubble-right">
-                    <span class="chat-author">Tester</span>
-                    <p>Agree, especially the payment issue.</p>
-                  </article>
-                  <article class="chat-bubble chat-bubble-left">
-                    <span class="chat-author">Dev</span>
-                    <p>We may need more time to fix.</p>
-                  </article>
-                </div>
-              </div>
-            </article>
-            <article
-              class="source-card source-card-email panel"
-              data-source-card="email"
-              style="cursor: pointer;"
-            >
-              <button
-                class="source-card-toggle"
-                type="button"
-                data-source-toggle="email"
-                aria-expanded="false"
+              </article>
+              <article
+                class="source-card source-card-email panel"
+                data-source-card="email"
                 style="cursor: pointer;"
               >
-                <div class="source-card-top">
-                  <span class="source-icon" aria-hidden="true">&#9993;</span>
-                  <div class="source-card-copy">
-                    <p class="card-label">Source 3</p>
-                    <h3>Stakeholder Emails</h3>
+                <button
+                  class="source-card-toggle"
+                  type="button"
+                  data-source-toggle="email"
+                  aria-expanded="false"
+                  style="cursor: pointer;"
+                >
+                  <div class="source-card-top">
+                    <span class="source-icon" aria-hidden="true">&#9993;</span>
+                    <div class="source-card-copy">
+                      <p class="card-label">Source 3</p>
+                      <h3>Stakeholder Emails</h3>
+                    </div>
+                    <span class="source-review-chip">Reviewed</span>
                   </div>
-                  <span class="source-review-chip">Reviewed</span>
+                  <p class="source-hint">Formal pressure signal tied to release commitment.</p>
+                </button>
+                <div class="source-detail">
+                  <p class="detail-kicker">STAKEHOLDER EMAIL</p>
+                  <article class="email-sheet">
+                    <div class="email-meta-row">
+                      <span>From:</span>
+                      <strong>Product Owner</strong>
+                    </div>
+                    <div class="email-meta-row">
+                      <span>Subject:</span>
+                      <strong>Release Commitment</strong>
+                    </div>
+                    <div class="email-body-copy">
+                      <p>We have already communicated the release timeline.</p>
+                      <p>Any delay will impact stakeholders and expectations.</p>
+                    </div>
+                  </article>
                 </div>
-                <p class="source-hint">Formal pressure signal tied to release commitment.</p>
-              </button>
-              <div class="source-detail">
-                <p class="detail-kicker">STAKEHOLDER EMAIL</p>
-                <article class="email-sheet">
-                  <div class="email-meta-row">
-                    <span>From:</span>
-                    <strong>Product Owner</strong>
-                  </div>
-                  <div class="email-meta-row">
-                    <span>Subject:</span>
-                    <strong>Release Commitment</strong>
-                  </div>
-                  <div class="email-body-copy">
-                    <p>We have already communicated the release timeline.</p>
-                    <p>Any delay will impact stakeholders and expectations.</p>
-                  </div>
-                </article>
-              </div>
-            </article>
-          </div>
-
-          <div class="analysis-feedback-row">
-            <p class="analysis-capture-status" id="analysisCaptureStatus" aria-live="polite"></p>
-            <p class="analysis-signal-hint" id="analysisSignalHint" aria-live="polite"></p>
-          </div>
-
-          <article
-            class="analysis-conflict-callout panel hidden"
-            id="analysisConflictCallout"
-            aria-live="polite"
-          >
-            <div class="analysis-conflict-icon" aria-hidden="true">&#9888;</div>
-            <div class="analysis-conflict-copy">
-              <p class="analysis-conflict-kicker">AI Insight Hint</p>
-              <h3>Conflicting signals detected</h3>
-              <p>Customer impact vs delivery commitment detected.</p>
+              </article>
             </div>
-          </article>
 
-          <section class="analysis-actions panel">
-            <div class="analysis-action-copy">
-              <p class="section-tag">AI Action</p>
-              <h3 id="analysisActionTitle">
-                Investigate the signals before asking AI to consolidate the picture.
-              </h3>
-              <p class="analysis-action-helper" id="analysisActionHelper">
-                Review all 3 sources to continue.
-              </p>
+            <div class="analysis-feedback-row">
+              <p class="analysis-capture-status" id="analysisCaptureStatus" aria-live="polite"></p>
+              <p class="analysis-signal-hint" id="analysisSignalHint" aria-live="polite"></p>
             </div>
-            <button
-              class="primary-button"
-              id="summariseButton"
-              type="button"
-              disabled
-              style="cursor: pointer;"
-            >
-              Use AI to Summarise
-            </button>
-          </section>
 
-          <section class="analysis-output hidden" id="summaryPanel">
-            <article class="panel">
-              <p class="section-tag">AI Summary</p>
-              <ul class="summary-list">
-                <li>3 high severity defects identified</li>
-                <li>2 may impact existing customers</li>
-                <li>Delivery commitment has already been communicated</li>
-              </ul>
+            <article
+              class="analysis-conflict-callout panel hidden"
+              id="analysisConflictCallout"
+              aria-live="polite"
+            >
+              <div class="analysis-conflict-icon" aria-hidden="true">&#9888;</div>
+              <div class="analysis-conflict-copy">
+                <p class="analysis-conflict-kicker">AI Insight Hint</p>
+                <h3>Conflicting signals detected</h3>
+                <p>Customer impact vs delivery commitment detected.</p>
+              </div>
             </article>
 
-            <article class="panel narrative-panel">
-              <p class="section-tag">Situation Overview</p>
-              <div class="narrative-copy" id="situationNarrative">
-                <p>Hi Sarah,</p>
-                <p>A new feature is scheduled to go live in one week.</p>
-                <p>Based on your analysis:</p>
-                <ul class="summary-list">
-                  <li>Critical defects have been identified</li>
-                  <li>There are potential impacts to existing customers</li>
-                  <li>Delivery expectations have already been communicated</li>
-                </ul>
-                <p>
-                  You've been called into a meeting to help the team decide the best way
-                  forward.
+            <section class="analysis-actions panel">
+              <div class="analysis-action-copy">
+                <p class="section-tag">AI Action</p>
+                <h3 id="analysisActionTitle">
+                  Investigate the signals before asking AI to consolidate the picture.
+                </h3>
+                <p class="analysis-action-helper" id="analysisActionHelper">
+                  Review all 3 sources to continue.
                 </p>
               </div>
               <button
                 class="primary-button"
-                id="enterMeetingButton"
+                id="summariseButton"
                 type="button"
+                disabled
                 style="cursor: pointer;"
               >
-                Enter Meeting Room
+                Use AI to Summarise
               </button>
-            </article>
+            </section>
+          </div>
+
+          <section class="analysis-output hidden" id="summaryPanel">
+            <section class="analysis-summary-main panel">
+              <p class="section-tag">AI Consolidated View</p>
+              <h3>Consolidated Situation View</h3>
+              <p class="analysis-summary-intro">
+                Based on the reviewed signals, three key patterns have emerged.
+              </p>
+
+              <div class="synthesis-findings">
+                <article class="synthesis-finding finding-risk reveal-step reveal-step-1">
+                  <p class="finding-kicker">Key Finding 1</p>
+                  <h4>High-severity defects require attention</h4>
+                  <p>
+                    Three high severity defects have been identified. Two may affect
+                    existing customers if released without further action.
+                  </p>
+                  <div class="trace-chip-row">
+                    <button class="trace-chip" data-trace-source="defect" type="button">
+                      Defect Report
+                    </button>
+                    <button class="trace-chip" data-trace-source="chat" type="button">
+                      Team Chat
+                    </button>
+                  </div>
+                </article>
+
+                <article class="synthesis-finding finding-pressure reveal-step reveal-step-2">
+                  <p class="finding-kicker">Key Finding 2</p>
+                  <h4>Delivery expectations are already in motion</h4>
+                  <p>
+                    The release timing has already been communicated, increasing the impact
+                    of any delay or scope change.
+                  </p>
+                  <div class="trace-chip-row">
+                    <button class="trace-chip" data-trace-source="email" type="button">
+                      Stakeholder Emails
+                    </button>
+                  </div>
+                </article>
+
+                <article class="synthesis-finding finding-balance reveal-step reveal-step-3">
+                  <p class="finding-kicker">Key Finding 3</p>
+                  <h4>The team is facing a trade-off</h4>
+                  <p>
+                    The meeting will need to balance customer risk, delivery commitment,
+                    and decision confidence.
+                  </p>
+                  <div class="trace-chip-row">
+                    <button class="trace-chip" data-trace-source="defect" type="button">
+                      Defect Report
+                    </button>
+                    <button class="trace-chip" data-trace-source="chat" type="button">
+                      Team Chat
+                    </button>
+                    <button class="trace-chip" data-trace-source="email" type="button">
+                      Stakeholder Emails
+                    </button>
+                  </div>
+                </article>
+              </div>
+
+              <article class="ai-interpretation panel reveal-step reveal-step-4">
+                <p class="finding-kicker">AI Interpretation</p>
+                <p>
+                  The strongest tension detected is between release commitment and
+                  unresolved customer-impacting risk.
+                </p>
+                <p>
+                  A structured discussion will be needed to align the team on whether to
+                  proceed, delay, or adjust the release approach.
+                </p>
+              </article>
+
+              <div class="summary-cta-block reveal-step reveal-step-5">
+                <p class="summary-cta-support" id="situationNarrative">
+                  You now have enough context to lead the meeting.
+                </p>
+                <div class="summary-cta-actions">
+                  <button
+                    class="primary-button"
+                    id="enterMeetingButton"
+                    type="button"
+                    style="cursor: pointer;"
+                  >
+                    Continue to Meeting Brief
+                  </button>
+                  <button class="text-link-button" id="reviewSignalsButton" type="button">
+                    Review signals again
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <aside class="analysis-summary-side">
+              <article class="panel summary-side-card reveal-step reveal-step-2">
+                <p class="section-tag">Source Confidence</p>
+                <ul class="summary-meta-list">
+                  <li><span>Signals reviewed</span><strong>3 of 3</strong></li>
+                  <li><span>Confidence in synthesis</span><strong>High</strong></li>
+                  <li><span>Contradictory pressure detected</span><strong>Yes</strong></li>
+                </ul>
+              </article>
+
+              <article class="panel summary-side-card reveal-step reveal-step-3">
+                <p class="section-tag">What the system prioritised</p>
+                <ul class="summary-list compact-list">
+                  <li>Potential customer impact</li>
+                  <li>Severity of unresolved defects</li>
+                  <li>Release commitment already communicated</li>
+                </ul>
+              </article>
+
+              <article class="panel summary-side-card reveal-step reveal-step-4">
+                <p class="section-tag">Meeting Readiness Check</p>
+                <ul class="readiness-list">
+                  <li class="is-ready">Situation understood</li>
+                  <li class="is-ready">Conflict detected</li>
+                  <li class="is-ready">Discussion needed</li>
+                  <li>Recommendation not yet made</li>
+                </ul>
+              </article>
+
+              <p class="trace-note hidden" id="traceNote" aria-live="polite"></p>
+            </aside>
           </section>
         </section>
 
         <section class="screen" id="meetingScreen" aria-labelledby="meetingTitle">
           <div class="screen-header">
             <div>
-              <p class="section-tag">Screen 3 to 7</p>
+              <p class="section-tag">Mission Phase 4</p>
               <h2 id="meetingTitle">Meeting Room</h2>
             </div>
             <div class="meeting-meta">
@@ -465,7 +565,7 @@
         <section class="screen" id="outcomeScreen" aria-labelledby="outcomeTitle">
           <div class="screen-header">
             <div>
-              <p class="section-tag">Screen 8 to 10</p>
+              <p class="section-tag">Mission Phase 5</p>
               <h2 id="outcomeTitle">Meeting Outcome</h2>
             </div>
           </div>

@@ -9,6 +9,11 @@ const progressLabel = document.getElementById("progressLabel");
 const nameForm = document.getElementById("nameForm");
 const playerNameInput = document.getElementById("playerName");
 const identityShift = document.getElementById("identityShift");
+const analysisPhaseTag = document.getElementById("analysisPhaseTag");
+const analysisTitle = document.getElementById("analysisTitle");
+const analysisIntro = document.getElementById("analysisIntro");
+const analysisStateBadge = document.getElementById("analysisStateBadge");
+const analysisDiscoveryView = document.getElementById("analysisDiscoveryView");
 const hostNameLabel = document.getElementById("hostNameLabel");
 const hostInitial = document.getElementById("hostInitial");
 const situationNarrative = document.getElementById("situationNarrative");
@@ -21,6 +26,8 @@ const analysisActionHelper = document.getElementById("analysisActionHelper");
 const analysisSignalHint = document.getElementById("analysisSignalHint");
 const analysisConflictCallout = document.getElementById("analysisConflictCallout");
 const enterMeetingButton = document.getElementById("enterMeetingButton");
+const reviewSignalsButton = document.getElementById("reviewSignalsButton");
+const traceNote = document.getElementById("traceNote");
 const decisionPanel = document.getElementById("decisionPanel");
 const assistantHeading = document.getElementById("assistantHeading");
 const assistantContent = document.getElementById("assistantContent");
@@ -37,6 +44,7 @@ const returnHomeButton = document.getElementById("returnHomeButton");
 const optionTemplate = document.getElementById("optionTemplate");
 const insightSteps = Array.from(document.querySelectorAll("[data-insight-step]"));
 const analysisSourceCards = Array.from(document.querySelectorAll("[data-source-card]"));
+const traceChips = Array.from(document.querySelectorAll("[data-trace-source]"));
 
 const stakeholderCards = {
   tester: document.querySelector('[data-stakeholder-card="tester"]'),
@@ -55,8 +63,8 @@ const reactionChips = {
 const missionLabels = {
   landing: "Mission Phase 1: Briefing",
   analysis: "Mission Phase 2: Signal Analysis",
-  meeting: "Mission Phase 3: Live Meeting",
-  outcome: "Mission Phase 4: Debrief",
+  meeting: "Mission Phase 4: Live Meeting",
+  outcome: "Mission Phase 5: Debrief",
 };
 
 const analysisSourceLabels = {
@@ -97,9 +105,15 @@ const defaultState = () => ({
 let state = defaultState();
 
 function renderProgressLabel(screenKey) {
+  let label = missionLabels[screenKey];
+
+  if (screenKey === "analysis" && state.aiSummaryShown) {
+    label = "Mission Phase 3: Signal Synthesis";
+  }
+
   progressLabel.innerHTML = `
     <span class="phase-icon" aria-hidden="true">&#128752;&#65039;</span>
-    ${missionLabels[screenKey]}
+    ${label}
   `;
 }
 
@@ -455,17 +469,7 @@ function updateHostLabels() {
   const playerName = state.playerName.trim() || "Sarah";
   hostNameLabel.textContent = playerName;
   hostInitial.textContent = playerName.charAt(0).toUpperCase();
-  situationNarrative.innerHTML = `
-    <p>Hi ${playerName},</p>
-    <p>A new feature is scheduled to go live in one week.</p>
-    <p>Based on your analysis:</p>
-    <ul class="summary-list">
-      <li>Critical defects have been identified</li>
-      <li>There are potential impacts to existing customers</li>
-      <li>Delivery expectations have already been communicated</li>
-    </ul>
-    <p>You've been called into a meeting to help the team decide the best way forward.</p>
-  `;
+  situationNarrative.textContent = "You now have enough context to lead the meeting.";
 }
 
 function updateIdentityShift() {
@@ -497,6 +501,24 @@ function renderAnalysisSources() {
   });
 }
 
+function renderAnalysisHeader() {
+  if (state.aiSummaryShown) {
+    analysisPhaseTag.textContent = "Mission Phase 3";
+    analysisTitle.textContent = "AI Summary";
+    analysisIntro.textContent =
+      "The system has reviewed the signals and identified the core tensions shaping this meeting.";
+    analysisProgressPill.classList.add("hidden");
+    analysisStateBadge.classList.remove("hidden");
+    return;
+  }
+
+  analysisPhaseTag.textContent = "Mission Phase 2";
+  analysisTitle.textContent = "Signal Analysis";
+  analysisIntro.textContent = "Review the signals before making a decision.";
+  analysisProgressPill.classList.remove("hidden");
+  analysisStateBadge.classList.add("hidden");
+}
+
 function renderAnalysisAction() {
   const reviewedCount = state.reviewedSources.length;
   const canSummarise = reviewedCount === 3;
@@ -516,7 +538,7 @@ function renderAnalysisAction() {
   }
 
   if (canSummarise) {
-    analysisActionTitle.textContent = "You've gathered enough signals. Generate a consolidated view?";
+    analysisActionTitle.textContent = "Let AI connect the dots.";
     analysisActionHelper.textContent = "All key signals reviewed. Use AI to Summarise.";
     analysisSignalHint.textContent = "";
     return;
@@ -529,9 +551,18 @@ function renderAnalysisAction() {
 }
 
 function renderAnalysisView() {
+  renderAnalysisHeader();
   renderAnalysisSources();
   renderAnalysisAction();
+  analysisDiscoveryView.classList.toggle("hidden", state.aiSummaryShown);
   summaryPanel.classList.toggle("hidden", !state.aiSummaryShown);
+  if (!state.aiSummaryShown) {
+    traceNote.textContent = "";
+    traceNote.classList.add("hidden");
+  }
+  if (screens.analysis.classList.contains("screen-active")) {
+    renderProgressLabel("analysis");
+  }
 }
 
 function handleSourceReview(sourceId) {
@@ -1031,8 +1062,23 @@ summariseButton.addEventListener("click", () => {
   summaryPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
+reviewSignalsButton?.addEventListener("click", () => {
+  state.aiSummaryShown = false;
+  renderAnalysisView();
+  analysisDiscoveryView.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
 enterMeetingButton.addEventListener("click", () => {
   startMeeting();
+});
+
+traceChips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    const sourceId = chip.dataset.traceSource;
+    const sourceLabel = analysisSourceLabels[sourceId] || "source";
+    traceNote.textContent = `Referenced from reviewed ${sourceLabel}.`;
+    traceNote.classList.remove("hidden");
+  });
 });
 
 aiAssistButton.addEventListener("click", () => {
