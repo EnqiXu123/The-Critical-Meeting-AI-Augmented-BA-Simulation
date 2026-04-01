@@ -219,6 +219,8 @@ button {
 #landingScreen .hero-grid {
   position: relative;
   z-index: 1;
+  gap: 20px;
+  align-items: stretch;
 }
 
 .hero-copy,
@@ -250,13 +252,13 @@ button {
 
 .hero-astronaut {
   position: absolute;
-  left: -54px;
-  bottom: -18px;
-  width: min(50%, 390px);
-  opacity: 0.22;
+  left: -26px;
+  bottom: -6px;
+  width: min(56%, 430px);
+  opacity: 0.52;
   pointer-events: none;
   z-index: 0;
-  filter: saturate(0.8) brightness(0.82) contrast(1.05);
+  filter: saturate(0.94) brightness(0.96) contrast(1.08);
   transform: translate3d(
     calc(var(--parallax-x) * -0.1),
     calc(var(--parallax-y) * -0.08),
@@ -276,8 +278,8 @@ button {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(15, 41, 52, 0) 48%, rgba(15, 41, 52, 0.82) 100%),
-    linear-gradient(180deg, rgba(15, 41, 52, 0) 58%, rgba(15, 41, 52, 0.84) 100%);
+    linear-gradient(90deg, rgba(15, 41, 52, 0) 40%, rgba(15, 41, 52, 0.52) 100%),
+    linear-gradient(180deg, rgba(15, 41, 52, 0.02) 48%, rgba(15, 41, 52, 0.56) 100%);
 }
 
 .hero-copy::after,
@@ -390,6 +392,88 @@ button {
   display: block;
   margin-top: 4px;
   color: var(--accent-strong);
+}
+
+#landingScreen .hero-copy {
+  padding: 28px;
+  min-height: 492px;
+}
+
+#landingScreen .hero-copy h2 {
+  font-size: clamp(2rem, 3.4vw, 2.85rem);
+}
+
+#landingScreen .hero-subtitle {
+  margin: 10px 0 14px;
+  font-size: 0.98rem;
+}
+
+#landingScreen .hero-subtitle span:first-child {
+  font-size: 1.28rem;
+}
+
+#landingScreen .hero-subtitle span + span {
+  margin-top: 6px;
+}
+
+#landingScreen .micro-hook {
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+}
+
+#landingScreen .section-tag {
+  font-size: 0.72rem;
+  margin-bottom: 6px;
+}
+
+#landingScreen .experience-preview {
+  margin-bottom: 12px;
+}
+
+#landingScreen .experience-list {
+  gap: 10px;
+}
+
+#landingScreen .experience-list li {
+  padding: 13px 16px 13px 36px;
+  font-size: 0.92rem;
+}
+
+#landingScreen .experience-list li::before {
+  top: 20px;
+  left: 16px;
+  width: 8px;
+  height: 8px;
+}
+
+#landingScreen .wow-line {
+  margin-bottom: 16px;
+  font-size: 0.94rem;
+  line-height: 1.48;
+}
+
+#landingScreen .name-panel {
+  gap: 10px;
+  margin-top: 0;
+}
+
+#landingScreen .name-panel label {
+  font-size: 0.9rem;
+}
+
+#landingScreen .identity-shift {
+  font-size: 0.9rem;
+}
+
+#landingScreen input[type="text"] {
+  padding: 14px 16px;
+  font-size: 0.95rem;
+}
+
+#landingScreen .hero-cta {
+  padding: 12px 16px;
+  font-size: 0.96rem;
 }
 
 .name-panel {
@@ -552,6 +636,11 @@ input[type="text"]::placeholder {
   border-color: rgba(127, 209, 194, 0.28);
 }
 
+#landingScreen .ai-preview-panel {
+  min-height: 492px;
+  padding: 22px;
+}
+
 .panel-head {
   display: flex;
   justify-content: space-between;
@@ -560,10 +649,19 @@ input[type="text"]::placeholder {
   margin-bottom: 18px;
 }
 
+#landingScreen .panel-head {
+  margin-bottom: 14px;
+}
+
+#landingScreen .panel-head h3 {
+  font-size: 1.18rem;
+}
+
 #landingScreen .live-indicator {
   color: var(--accent-strong);
   background: rgba(127, 209, 194, 0.12);
   box-shadow: 0 0 18px rgba(127, 209, 194, 0.12);
+  font-size: 0.84rem;
 }
 
 .insight-console {
@@ -577,6 +675,12 @@ input[type="text"]::placeholder {
   background: rgba(5, 16, 21, 0.7);
   align-content: center;
   box-shadow: inset 0 0 0 1px rgba(127, 209, 194, 0.08);
+}
+
+#landingScreen .insight-console {
+  min-height: 324px;
+  padding: 18px;
+  gap: 12px;
 }
 
 .insight-console::after {
@@ -605,6 +709,10 @@ input[type="text"]::placeholder {
     transform 460ms ease;
 }
 
+#landingScreen .insight-step {
+  padding: 15px 16px;
+}
+
 .insight-step.active {
   opacity: 1;
   border-color: rgba(127, 209, 194, 0.34);
@@ -627,9 +735,18 @@ input[type="text"]::placeholder {
   text-transform: uppercase;
 }
 
+#landingScreen .insight-index {
+  margin-bottom: 6px;
+  font-size: 0.74rem;
+}
+
 .insight-primary {
   color: var(--text);
   font-size: 1.05rem;
+}
+
+#landingScreen .insight-primary {
+  font-size: 0.94rem;
 }
 
 .insight-secondary {
@@ -640,6 +757,11 @@ input[type="text"]::placeholder {
   transition:
     opacity 540ms ease,
     transform 540ms ease;
+}
+
+#landingScreen .insight-secondary {
+  margin-top: 8px;
+  font-size: 0.88rem;
 }
 
 .insight-step.is-revealed .insight-secondary {
@@ -658,11 +780,20 @@ input[type="text"]::placeholder {
   opacity: 0.72;
 }
 
+#landingScreen .signal-divider {
+  gap: 2px;
+  font-size: 0.66rem;
+}
+
 .signal-divider span:last-child {
   color: rgba(246, 240, 231, 0.56);
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   animation: signal-flicker 2.8s ease-in-out infinite;
+}
+
+#landingScreen .signal-divider span:last-child {
+  font-size: 0.62rem;
 }
 
 .screen-header {
