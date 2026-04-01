@@ -49,19 +49,21 @@
 
                 <form class="name-panel" id="nameForm">
                   <label for="playerName">Enter your name to begin</label>
-                  <input
-                    id="playerName"
-                    name="playerName"
-                    type="text"
-                    placeholder="e.g. Sarah"
-                    maxlength="40"
-                    autocomplete="name"
-                  />
+                  <div class="name-entry-row">
+                    <input
+                      id="playerName"
+                      name="playerName"
+                      type="text"
+                      placeholder="e.g. Sarah"
+                      maxlength="40"
+                      autocomplete="name"
+                    />
+                    <button class="primary-button hero-cta" type="submit">
+                      <span class="cta-icon" aria-hidden="true">&#9654;</span>
+                      Enter the Meeting
+                    </button>
+                  </div>
                   <p class="identity-shift" id="identityShift" aria-live="polite"></p>
-                  <button class="primary-button hero-cta" type="submit">
-                    <span class="cta-icon" aria-hidden="true">&#9654;</span>
-                    Enter the Meeting
-                  </button>
                 </form>
               </div>
             </div>

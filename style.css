@@ -500,10 +500,17 @@ button {
 }
 
 #landingScreen .name-panel {
-  width: min(78%, 540px);
+  width: min(82%, 640px);
   max-width: none;
   gap: 10px;
   margin-top: 18px;
+}
+
+#landingScreen .name-entry-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
 }
 
 #landingScreen .name-panel label {
@@ -527,6 +534,7 @@ button {
   min-height: 56px;
   padding: 14px 18px;
   font-size: 0.96rem;
+  white-space: nowrap;
   animation: cta-pulse 3.8s ease-in-out infinite;
 }
 
@@ -1534,6 +1542,10 @@ input[type="text"]::placeholder {
 
   #landingScreen .name-panel {
     width: 100%;
+  }
+
+  #landingScreen .name-entry-row {
+    grid-template-columns: 1fr;
   }
 
   #landingScreen .ai-preview-panel {
