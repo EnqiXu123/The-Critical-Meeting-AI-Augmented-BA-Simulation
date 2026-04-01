@@ -121,7 +121,10 @@
           <div class="screen-header">
             <div>
               <p class="section-tag">Mission Phase 2</p>
-              <h2 id="analysisTitle">Signal Analysis</h2>
+              <div class="analysis-title-row">
+                <h2 id="analysisTitle">Signal Analysis</h2>
+                <span class="analysis-progress-pill" id="analysisProgressPill">0/3 reviewed</span>
+              </div>
             </div>
             <p class="screen-intro">Investigate the signals before making sense of them.</p>
           </div>
@@ -238,7 +241,24 @@
               </div>
             </article>
           </div>
-          <p class="analysis-signal-hint" id="analysisSignalHint" aria-live="polite"></p>
+
+          <div class="analysis-feedback-row">
+            <p class="analysis-capture-status" id="analysisCaptureStatus" aria-live="polite"></p>
+            <p class="analysis-signal-hint" id="analysisSignalHint" aria-live="polite"></p>
+          </div>
+
+          <article
+            class="analysis-conflict-callout panel hidden"
+            id="analysisConflictCallout"
+            aria-live="polite"
+          >
+            <div class="analysis-conflict-icon" aria-hidden="true">&#9888;</div>
+            <div class="analysis-conflict-copy">
+              <p class="analysis-conflict-kicker">AI Insight Hint</p>
+              <h3>Conflicting signals detected</h3>
+              <p>Customer impact vs delivery commitment detected.</p>
+            </div>
+          </article>
 
           <section class="analysis-actions panel">
             <div class="analysis-action-copy">
@@ -247,7 +267,7 @@
                 Investigate the signals before asking AI to consolidate the picture.
               </h3>
               <p class="analysis-action-helper" id="analysisActionHelper">
-                Review at least 2 sources to continue.
+                Review all 3 sources to continue.
               </p>
             </div>
             <button class="primary-button" id="summariseButton" type="button" disabled>

@@ -14,9 +14,12 @@ const hostInitial = document.getElementById("hostInitial");
 const situationNarrative = document.getElementById("situationNarrative");
 const summariseButton = document.getElementById("summariseButton");
 const summaryPanel = document.getElementById("summaryPanel");
+const analysisProgressPill = document.getElementById("analysisProgressPill");
+const analysisCaptureStatus = document.getElementById("analysisCaptureStatus");
 const analysisActionTitle = document.getElementById("analysisActionTitle");
 const analysisActionHelper = document.getElementById("analysisActionHelper");
 const analysisSignalHint = document.getElementById("analysisSignalHint");
+const analysisConflictCallout = document.getElementById("analysisConflictCallout");
 const enterMeetingButton = document.getElementById("enterMeetingButton");
 const decisionPanel = document.getElementById("decisionPanel");
 const assistantHeading = document.getElementById("assistantHeading");
@@ -56,6 +59,12 @@ const missionLabels = {
   outcome: "Mission Phase 4: Debrief",
 };
 
+const analysisSourceLabels = {
+  defect: "Defect Report",
+  chat: "Team Chat",
+  email: "Stakeholder Emails",
+};
+
 const defaultState = () => ({
   playerName: "Sarah",
   notes: [],
@@ -75,6 +84,7 @@ const defaultState = () => ({
   currentRound: 0,
   stage: "kickoff",
   reviewedSources: [],
+  lastAnalysisFeedback: "",
   selections: {
     opening: null,
     problem: null,
@@ -475,11 +485,15 @@ function renderAnalysisSources() {
   analysisSourceCards.forEach((card) => {
     const sourceId = card.dataset.sourceCard;
     const toggle = card.querySelector("[data-source-toggle]");
+    const reviewChip = card.querySelector(".source-review-chip");
     const isReviewed = state.reviewedSources.includes(sourceId);
 
     card.classList.toggle("is-reviewed", isReviewed);
     card.classList.toggle("is-expanded", isReviewed);
     toggle?.setAttribute("aria-expanded", String(isReviewed));
+    if (reviewChip) {
+      reviewChip.textContent = isReviewed ? "Signal captured" : "Reviewed";
+    }
   });
 }
 
@@ -487,8 +501,11 @@ function renderAnalysisAction() {
   const reviewedCount = state.reviewedSources.length;
   const canSummarise = reviewedCount === 3;
 
+  analysisProgressPill.textContent = `${reviewedCount}/3 reviewed`;
+  analysisCaptureStatus.textContent = state.lastAnalysisFeedback;
   summariseButton.disabled = !canSummarise;
   summariseButton.setAttribute("aria-disabled", String(!canSummarise));
+  analysisConflictCallout.classList.toggle("hidden", !canSummarise || state.aiSummaryShown);
 
   if (state.aiSummaryShown) {
     analysisActionTitle.textContent = "AI Summary generated. Review the consolidated view below.";
@@ -499,10 +516,9 @@ function renderAnalysisAction() {
   }
 
   if (canSummarise) {
-    analysisActionTitle.textContent =
-      "You've reviewed every signal. Generate a consolidated view when you're ready.";
+    analysisActionTitle.textContent = "You've gathered enough signals. Generate a consolidated view?";
     analysisActionHelper.textContent = "All key signals reviewed. Use AI to Summarise.";
-    analysisSignalHint.textContent = "All key signals reviewed. Use AI to Summarise.";
+    analysisSignalHint.textContent = "";
     return;
   }
 
@@ -519,6 +535,7 @@ function renderAnalysisView() {
 }
 
 function handleSourceReview(sourceId) {
+  state.lastAnalysisFeedback = `Insight recorded: ${analysisSourceLabels[sourceId]}.`;
   if (!state.reviewedSources.includes(sourceId)) {
     state.reviewedSources = [...state.reviewedSources, sourceId];
   }
