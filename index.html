@@ -23,24 +23,23 @@
               <p class="section-tag">Landing Page</p>
               <h2 id="landingTitle">The Critical Meeting</h2>
               <p class="hero-subtitle">
-                Experience how a Business Analyst uses AI to prepare for and lead a
-                high-stakes project meeting.
+                <span>A release decision needs to be made.</span>
+                <span>Multiple perspectives. Limited time.</span>
+                <span>How you lead the conversation will shape the outcome.</span>
+              </p>
+              <p class="micro-hook">
+                <span aria-hidden="true">&#9888;</span>
+                You are about to step into a live project meeting.
               </p>
 
-              <div class="value-strip" aria-label="AI features">
-                <article class="value-card">
-                  <span class="value-icon">01</span>
-                  <h3>AI-assisted issue analysis</h3>
-                </article>
-                <article class="value-card">
-                  <span class="value-icon">02</span>
-                  <h3>AI-generated meeting notes</h3>
-                </article>
-                <article class="value-card">
-                  <span class="value-icon">03</span>
-                  <h3>AI-drafted follow-up email</h3>
-                </article>
-              </div>
+              <section class="experience-preview" aria-label="What you'll experience">
+                <p class="section-tag">What you'll experience</p>
+                <ul class="experience-list">
+                  <li>Navigate conflicting perspectives</li>
+                  <li>Guide the discussion under pressure</li>
+                  <li>Make a recommendation that impacts the team</li>
+                </ul>
+              </section>
 
               <form class="name-panel" id="nameForm">
                 <label for="playerName">Enter your name</label>
@@ -52,20 +51,38 @@
                   maxlength="40"
                   autocomplete="name"
                 />
-                <button class="primary-button" type="submit">Start Simulation</button>
+                <p class="identity-shift" id="identityShift" aria-live="polite"></p>
+                <button class="primary-button" type="submit">
+                  <span class="cta-icon" aria-hidden="true">&#9654;</span>
+                  Enter the Meeting
+                </button>
               </form>
             </div>
 
             <aside class="ai-preview-panel panel">
               <div class="panel-head">
-                <p class="section-tag">AI Assistant Preview</p>
-                <span class="live-indicator">Live Preview</span>
+                <div>
+                  <p class="section-tag">Background Process</p>
+                  <h3>System Insight</h3>
+                </div>
+                <span class="live-indicator">Active</span>
               </div>
-              <div class="typing-console" aria-live="polite">
-                <p class="console-line active" data-rotate-line>Reviewing defect report...</p>
-                <p class="console-line" data-rotate-line>Summarising team chat...</p>
-                <p class="console-line" data-rotate-line>Highlighting stakeholder concerns...</p>
-                <p class="console-line" data-rotate-line>Preparing meeting notes draft...</p>
+              <div class="insight-console" aria-live="polite">
+                <article class="insight-step active" data-insight-step>
+                  <p class="insight-index">Step 1</p>
+                  <p class="insight-primary">Analysing inputs...</p>
+                  <p class="insight-secondary">Patterns detected</p>
+                </article>
+                <article class="insight-step" data-insight-step>
+                  <p class="insight-index">Step 2</p>
+                  <p class="insight-primary">Signals emerging...</p>
+                  <p class="insight-secondary">Stakeholder alignment unclear</p>
+                </article>
+                <article class="insight-step" data-insight-step>
+                  <p class="insight-index">Step 3</p>
+                  <p class="insight-primary">Preparing context...</p>
+                  <p class="insight-secondary">Key decision required</p>
+                </article>
               </div>
             </aside>
           </div>

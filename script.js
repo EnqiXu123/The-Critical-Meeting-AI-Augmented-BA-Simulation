@@ -8,6 +8,7 @@ const screens = {
 const progressLabel = document.getElementById("progressLabel");
 const nameForm = document.getElementById("nameForm");
 const playerNameInput = document.getElementById("playerName");
+const identityShift = document.getElementById("identityShift");
 const hostNameLabel = document.getElementById("hostNameLabel");
 const hostInitial = document.getElementById("hostInitial");
 const situationNarrative = document.getElementById("situationNarrative");
@@ -28,7 +29,7 @@ const emailPreview = document.getElementById("emailPreview");
 const tryAgainButton = document.getElementById("tryAgainButton");
 const returnHomeButton = document.getElementById("returnHomeButton");
 const optionTemplate = document.getElementById("optionTemplate");
-const rotatingLines = Array.from(document.querySelectorAll("[data-rotate-line]"));
+const insightSteps = Array.from(document.querySelectorAll("[data-insight-step]"));
 
 const stakeholderCards = {
   tester: document.querySelector('[data-stakeholder-card="tester"]'),
@@ -445,6 +446,19 @@ function updateHostLabels() {
   `;
 }
 
+function updateIdentityShift() {
+  const playerName = playerNameInput.value.trim();
+
+  if (!playerName) {
+    identityShift.textContent = "";
+    identityShift.classList.remove("is-visible");
+    return;
+  }
+
+  identityShift.textContent = `${playerName}, you'll be leading this meeting.`;
+  identityShift.classList.add("is-visible");
+}
+
 function addNotes(noteLines) {
   noteLines.forEach((line) => {
     if (!state.notes.includes(line)) {
@@ -827,6 +841,7 @@ function resetSimulation({ destination = "landing", preserveName = false } = {})
   decisionPanel.innerHTML = "";
   highlightSpeaker("");
   updateHostLabels();
+  updateIdentityShift();
   if (destination === "landing") {
     showScreen("landing");
   } else {
@@ -842,18 +857,37 @@ function startMeeting() {
   renderKickoffStep();
 }
 
-function rotatePreviewLines() {
-  if (!rotatingLines.length) {
+function cycleSystemInsights() {
+  if (!insightSteps.length) {
     return;
   }
 
   let activeIndex = 0;
+  let revealTimer;
+
+  const activateStep = (index) => {
+    clearTimeout(revealTimer);
+    insightSteps.forEach((step, stepIndex) => {
+      step.classList.toggle("active", stepIndex === index);
+      step.classList.remove("is-revealed");
+    });
+
+    revealTimer = setTimeout(() => {
+      insightSteps[index].classList.add("is-revealed");
+    }, 900);
+  };
+
+  activateStep(activeIndex);
+
   setInterval(() => {
-    rotatingLines[activeIndex].classList.remove("active");
-    activeIndex = (activeIndex + 1) % rotatingLines.length;
-    rotatingLines[activeIndex].classList.add("active");
-  }, 1800);
+    activeIndex = (activeIndex + 1) % insightSteps.length;
+    activateStep(activeIndex);
+  }, 3600);
 }
+
+playerNameInput.addEventListener("input", () => {
+  updateIdentityShift();
+});
 
 nameForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -920,4 +954,5 @@ renderReactions();
 renderAssistant("Suggested meeting structure", assistantKickoff);
 updateTension();
 updateHostLabels();
-rotatePreviewLines();
+updateIdentityShift();
+cycleSystemInsights();
