@@ -1,0 +1,9 @@
+<svg width="320" height="280" viewBox="0 0 320 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="280" rx="28" fill="#20313C"/>
+  <rect x="18" y="18" width="284" height="244" rx="22" fill="#2E4654" stroke="#DD8A78" stroke-opacity="0.42"/>
+  <circle cx="160" cy="96" r="42" fill="#DD8A78"/>
+  <path d="M106 215C106 181.311 133.311 154 167 154H153C186.689 154 214 181.311 214 215V224H106V215Z" fill="#F0C2B7"/>
+  <path d="M136 66C141.246 47.6125 158.147 34 178.227 34C192.445 34 205.07 40.8235 214 51.3944V89H136V66Z" fill="#F8E2DC"/>
+  <text x="32" y="244" fill="#F6F0E7" font-family="Trebuchet MS, sans-serif" font-size="18" font-weight="700">Tester</text>
+  <text x="32" y="264" fill="#B8C5BE" font-family="Trebuchet MS, sans-serif" font-size="12">Placeholder image - replace later</text>
+</svg>

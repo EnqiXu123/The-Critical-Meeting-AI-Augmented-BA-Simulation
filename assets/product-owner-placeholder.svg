@@ -1,0 +1,9 @@
+<svg width="320" height="280" viewBox="0 0 320 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="280" rx="28" fill="#1D3640"/>
+  <rect x="18" y="18" width="284" height="244" rx="22" fill="#274B56" stroke="#7FD1C2" stroke-opacity="0.35"/>
+  <circle cx="160" cy="96" r="42" fill="#E9B26A"/>
+  <path d="M106 215C106 181.311 133.311 154 167 154H153C186.689 154 214 181.311 214 215V224H106V215Z" fill="#F3D7B2"/>
+  <path d="M123 77C128.143 54.0496 147.23 38 171 38C190.297 38 207.077 48.5855 216 64.2887V90H123V77Z" fill="#F5E7D2"/>
+  <text x="32" y="244" fill="#F6F0E7" font-family="Trebuchet MS, sans-serif" font-size="18" font-weight="700">Product Owner</text>
+  <text x="32" y="264" fill="#B8C5BE" font-family="Trebuchet MS, sans-serif" font-size="12">Placeholder image - replace later</text>
+</svg>
