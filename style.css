@@ -180,8 +180,6 @@ button {
   transition: transform 220ms ease-out;
 }
 
-.landing-stars::before,
-.landing-stars::after,
 .landing-particles::before,
 .landing-particles::after {
   content: "";
@@ -190,92 +188,47 @@ button {
 }
 
 .landing-stars {
-  opacity: 0.84;
-  background-image:
-    var(--star-white),
-    var(--star-teal),
-    var(--star-white),
-    var(--star-amber),
-    var(--star-white),
-    var(--star-teal),
-    var(--star-white),
-    var(--star-amber);
-  background-repeat: no-repeat;
-  background-size:
-    18px 18px,
-    22px 22px,
-    16px 16px,
-    20px 20px,
-    17px 17px,
-    18px 18px,
-    17px 17px,
-    19px 19px;
-  background-position:
-    8% 18%,
-    17% 72%,
-    29% 34%,
-    41% 82%,
-    56% 16%,
-    68% 58%,
-    82% 28%,
-    93% 74%;
+  opacity: 1;
   transform: translate3d(
     calc(var(--parallax-x) * -0.04),
     calc(var(--parallax-y) * -0.04),
     0
   );
-  animation:
-    star-drift 26s linear infinite,
-    star-twinkle-a 8.5s ease-in-out infinite;
+  animation: star-drift 26s linear infinite;
 }
 
-.landing-stars::before {
-  opacity: 0.62;
-  background-image:
-    var(--star-white),
-    var(--star-teal),
-    var(--star-white),
-    var(--star-amber),
-    var(--star-white);
+.bg-star {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  background-position: center;
   background-repeat: no-repeat;
-  background-size:
-    14px 14px,
-    16px 16px,
-    13px 13px,
-    15px 15px,
-    14px 14px;
-  background-position:
-    12% 24%,
-    34% 62%,
-    58% 42%,
-    76% 14%,
-    88% 54%;
-  animation:
-    star-layer-drift 34s linear infinite,
-    star-twinkle-b 10.5s ease-in-out infinite;
+  background-size: contain;
+  opacity: 0.68;
+  mix-blend-mode: screen;
+  transform: translateZ(0) scale(0.88);
+  transform-origin: center;
+  will-change: opacity, transform;
+  animation: star-twinkle-loop var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
 }
 
-.landing-stars::after {
-  opacity: 0.42;
-  background-image:
-    var(--star-amber),
-    var(--star-white),
-    var(--star-teal),
-    var(--star-white);
-  background-repeat: no-repeat;
-  background-size:
-    17px 17px,
-    14px 14px,
-    16px 16px,
-    13px 13px;
-  background-position:
-    22% 10%,
-    47% 78%,
-    72% 34%,
-    90% 20%;
-  animation:
-    star-layer-drift 46s linear infinite reverse,
-    star-twinkle-c 12s ease-in-out infinite;
+.star-white {
+  background-image: var(--star-white);
+  filter: drop-shadow(0 0 8px rgba(246, 240, 231, 0.28));
+}
+
+.star-teal {
+  background-image: var(--star-teal);
+  filter: drop-shadow(0 0 8px rgba(185, 244, 216, 0.22));
+}
+
+.star-amber {
+  background-image: var(--star-amber);
+  filter: drop-shadow(0 0 8px rgba(240, 189, 117, 0.2));
 }
 
 .landing-particles {
@@ -354,6 +307,39 @@ button {
 #landingScreen .hero-copy > * {
   position: relative;
   z-index: 1;
+}
+
+#landingScreen .hero-copy::before,
+#landingScreen .ai-preview-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.28;
+  background-image:
+    var(--star-white),
+    var(--star-teal),
+    var(--star-white),
+    var(--star-amber),
+    var(--star-white),
+    radial-gradient(circle at 76% 18%, rgba(127, 209, 194, 0.12) 0, transparent 18%);
+  background-repeat: no-repeat;
+  background-size:
+    24px 24px,
+    20px 20px,
+    18px 18px,
+    22px 22px,
+    16px 16px,
+    auto;
+  background-position:
+    12% 18%,
+    84% 24%,
+    74% 78%,
+    28% 72%,
+    58% 48%,
+    center;
+  animation: panel-star-shimmer 8.8s ease-in-out infinite;
 }
 
 .hero-astronaut {
@@ -513,11 +499,14 @@ button {
 #landingScreen .hero-copy {
   padding: 28px;
   min-height: 454px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(6px) saturate(115%);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 32%),
-    linear-gradient(180deg, rgba(127, 209, 194, 0.12), transparent 60%),
-    linear-gradient(180deg, rgba(10, 20, 27, 0.74), rgba(14, 34, 43, 0.82));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    linear-gradient(180deg, rgba(127, 209, 194, 0.08), transparent 58%),
+    linear-gradient(180deg, rgba(10, 20, 27, 0.46), rgba(14, 34, 43, 0.58));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 24px 60px rgba(0, 0, 0, 0.22);
 }
 
 #landingScreen .hero-copy h2 {
@@ -743,11 +732,19 @@ input[type="text"]::placeholder {
 #landingScreen .ai-preview-panel {
   min-height: 454px;
   padding: 22px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(6px) saturate(115%);
   background:
-    radial-gradient(circle at top, rgba(127, 209, 194, 0.16), transparent 52%),
-    linear-gradient(180deg, rgba(240, 189, 117, 0.08), transparent 60%),
-    linear-gradient(180deg, rgba(8, 19, 25, 0.74), rgba(12, 29, 36, 0.82));
+    radial-gradient(circle at top, rgba(127, 209, 194, 0.12), transparent 52%),
+    linear-gradient(180deg, rgba(240, 189, 117, 0.06), transparent 60%),
+    linear-gradient(180deg, rgba(8, 19, 25, 0.48), rgba(12, 29, 36, 0.6));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 24px 60px rgba(0, 0, 0, 0.22);
+}
+
+#landingScreen .ai-preview-panel > * {
+  position: relative;
+  z-index: 1;
 }
 
 .panel-head {
@@ -790,7 +787,8 @@ input[type="text"]::placeholder {
   min-height: 262px;
   padding: 16px;
   gap: 10px;
-  background: rgba(5, 16, 21, 0.58);
+  background: rgba(5, 16, 21, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(127, 209, 194, 0.06);
 }
 
 .insight-console::after {
@@ -821,6 +819,7 @@ input[type="text"]::placeholder {
 
 #landingScreen .insight-step {
   padding: 15px 16px;
+  background: rgba(255, 255, 255, 0.018);
 }
 
 .insight-step.active {
@@ -943,6 +942,8 @@ input[type="text"]::placeholder {
 #landingScreen .experience-preview-side .experience-list li {
   padding: 11px 14px 11px 32px;
   font-size: 0.86rem;
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(4px);
 }
 
 #landingScreen .experience-preview-side .experience-list li::before {
@@ -1318,6 +1319,24 @@ input[type="text"]::placeholder {
   }
 }
 
+@keyframes panel-star-shimmer {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  35% {
+    opacity: 0.32;
+    transform: translate3d(-6px, 4px, 0) scale(1.02);
+  }
+
+  68% {
+    opacity: 0.26;
+    transform: translate3d(5px, -3px, 0) scale(0.99);
+  }
+}
+
 @keyframes star-drift {
   from {
     transform: translate3d(
@@ -1333,6 +1352,34 @@ input[type="text"]::placeholder {
       calc(var(--parallax-y) * -0.04 + 10px),
       0
     );
+  }
+}
+
+@keyframes star-twinkle-loop {
+  0%,
+  100% {
+    opacity: 0.56;
+    transform: translateZ(0) scale(0.86);
+  }
+
+  18% {
+    opacity: 0.94;
+    transform: translateZ(0) scale(1.04);
+  }
+
+  34% {
+    opacity: 0.62;
+    transform: translateZ(0) scale(0.9);
+  }
+
+  56% {
+    opacity: 1;
+    transform: translateZ(0) scale(1.12);
+  }
+
+  76% {
+    opacity: 0.66;
+    transform: translateZ(0) scale(0.92);
   }
 }
 
