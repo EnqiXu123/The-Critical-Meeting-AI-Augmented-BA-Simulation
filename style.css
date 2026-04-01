@@ -1944,31 +1944,6 @@ input[type="text"]::placeholder {
   transform: var(--station-transform) translateY(0) scale(1);
 }
 
-.host-card {
-  --station-transform: translateX(0);
-  position: absolute;
-  top: 154px;
-  right: 392px;
-  left: auto;
-  z-index: 3;
-  width: min(100%, 336px);
-  margin: 0;
-  display: grid;
-  justify-items: center;
-  text-align: center;
-  gap: 14px;
-  align-items: center;
-  padding: 20px 22px;
-  border-radius: 26px;
-  border: 1px solid rgba(127, 209, 194, 0.18);
-  background:
-    linear-gradient(180deg, rgba(127, 209, 194, 0.18), transparent 58%),
-    rgba(11, 28, 35, 0.32);
-  backdrop-filter: blur(18px);
-  transform: var(--station-transform);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
-}
-
 .stakeholder-grid {
   position: absolute;
   left: 28px;
@@ -2049,12 +2024,6 @@ input[type="text"]::placeholder {
   animation: station-pulse 5.2s ease-in-out infinite;
 }
 
-.host-ring {
-  width: 126px;
-  height: 126px;
-  --ring-glow: rgba(127, 209, 194, 0.24);
-}
-
 .role-amber {
   --ring-glow: rgba(240, 189, 117, 0.26);
 }
@@ -2081,29 +2050,8 @@ input[type="text"]::placeholder {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.stakeholder-avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, rgba(127, 209, 194, 0.4), rgba(240, 189, 117, 0.28));
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 .reaction-chip {
   justify-self: center;
-}
-
-.reaction-chip-host {
-  background: rgba(127, 209, 194, 0.16);
-  color: var(--accent-strong);
-}
-
-.host-avatar span {
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  color: var(--text);
 }
 
 .meeting-main-panels {
@@ -2636,10 +2584,6 @@ input[type="text"]::placeholder {
     padding: 22px;
   }
 
-  .host-card {
-    width: min(100%, 360px);
-  }
-
   .stakeholder-grid {
     left: 24px;
     right: 24px;
@@ -2826,15 +2770,6 @@ input[type="text"]::placeholder {
     justify-content: space-between;
   }
 
-  .host-card {
-    --station-transform: translateX(0);
-    position: relative;
-    top: auto;
-    left: auto;
-    width: 100%;
-    transform: none;
-  }
-
   .stakeholder-avatar-ring {
     width: 108px;
     height: 108px;
@@ -2856,10 +2791,6 @@ input[type="text"]::placeholder {
   .email-meta-row {
     grid-template-columns: 1fr;
     gap: 6px;
-  }
-
-  .host-card {
-    grid-template-columns: 1fr;
   }
 
   .stakeholder-grid {

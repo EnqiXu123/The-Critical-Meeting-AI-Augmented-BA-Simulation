@@ -14,8 +14,6 @@ const analysisTitle = document.getElementById("analysisTitle");
 const analysisIntro = document.getElementById("analysisIntro");
 const analysisStateBadge = document.getElementById("analysisStateBadge");
 const analysisDiscoveryView = document.getElementById("analysisDiscoveryView");
-const hostNameLabel = document.getElementById("hostNameLabel");
-const hostInitial = document.getElementById("hostInitial");
 const situationNarrative = document.getElementById("situationNarrative");
 const summariseButton = document.getElementById("summariseButton");
 const summaryPanel = document.getElementById("summaryPanel");
@@ -37,7 +35,6 @@ const meetingRoom = document.getElementById("meetingRoom");
 const meetingIntroOverlay = document.getElementById("meetingIntroOverlay");
 const meetingIntroPrimary = document.getElementById("meetingIntroPrimary");
 const meetingIntroSecondary = document.getElementById("meetingIntroSecondary");
-const hostCard = document.getElementById("hostCard");
 const conversationTitle = document.getElementById("conversationTitle");
 const conversationFeed = document.getElementById("conversationFeed");
 const decisionPanel = document.getElementById("decisionPanel");
@@ -554,7 +551,6 @@ function renderReactions() {
 }
 
 function highlightSpeaker(stakeholderKey) {
-  hostCard.classList.toggle("is-speaking", !stakeholderKey || stakeholderKey === "host");
   Object.entries(stakeholderCards).forEach(([key, card]) => {
     card.classList.toggle("is-speaking", key === stakeholderKey);
   });
@@ -655,9 +651,6 @@ function buildConversationCue(text) {
 }
 
 function updateHostLabels() {
-  const playerName = state.playerName.trim() || "Sarah";
-  hostNameLabel.textContent = playerName;
-  hostInitial.textContent = playerName.charAt(0).toUpperCase();
   situationNarrative.textContent = "You now have enough context to lead the meeting.";
 }
 
@@ -1266,7 +1259,6 @@ ${greetingName}`;
 
 function getMeetingParticipants() {
   return [
-    hostCard,
     stakeholderCards.tester,
     stakeholderCards.techLead,
     stakeholderCards.productOwner,
