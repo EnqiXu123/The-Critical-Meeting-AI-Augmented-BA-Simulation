@@ -999,6 +999,12 @@ input[type="text"]::placeholder {
   gap: 18px;
 }
 
+.analysis-header-actions {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
 .analysis-title-row {
   display: flex;
   align-items: center;
@@ -1018,6 +1024,12 @@ input[type="text"]::placeholder {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.analysis-back-button {
+  min-height: 46px;
+  padding: 12px 16px;
+  text-align: center;
 }
 
 .analysis-progress-pill {
@@ -2577,6 +2589,11 @@ input[type="text"]::placeholder {
   .analysis-header-main {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .analysis-header-actions {
+    width: 100%;
+    justify-items: start;
   }
 
   .analysis-summary-main {

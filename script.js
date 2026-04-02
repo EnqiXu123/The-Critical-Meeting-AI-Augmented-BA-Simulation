@@ -25,6 +25,7 @@ const analysisSignalHint = document.getElementById("analysisSignalHint");
 const analysisConflictCallout = document.getElementById("analysisConflictCallout");
 const enterMeetingButton = document.getElementById("enterMeetingButton");
 const reviewSignalsButton = document.getElementById("reviewSignalsButton");
+const backToBriefingButton = document.getElementById("backToBriefingButton");
 const traceNote = document.getElementById("traceNote");
 const tensionPill = document.getElementById("tensionPill");
 const meetingStatusLabel = document.getElementById("meetingStatusLabel");
@@ -1535,6 +1536,10 @@ reviewSignalsButton?.addEventListener("click", () => {
   state.aiSummaryShown = false;
   renderAnalysisView();
   analysisDiscoveryView.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+backToBriefingButton?.addEventListener("click", () => {
+  resetSimulation({ destination: "landing", preserveName: false });
 });
 
 enterMeetingButton.addEventListener("click", () => {
