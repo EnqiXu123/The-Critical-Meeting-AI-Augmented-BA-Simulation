@@ -17,6 +17,13 @@ const analysisDiscoveryView = document.getElementById("analysisDiscoveryView");
 const situationNarrative = document.getElementById("situationNarrative");
 const summariseButton = document.getElementById("summariseButton");
 const summaryPanel = document.getElementById("summaryPanel");
+const summaryProgressPill = document.getElementById("summaryProgressPill");
+const briefingLaunchCard = document.getElementById("briefingLaunchCard");
+const revealInsightButton = document.getElementById("revealInsightButton");
+const summaryTensionValue = document.getElementById("summaryTensionValue");
+const summarySignalsReviewedValue = document.getElementById("summarySignalsReviewedValue");
+const summaryConfidenceValue = document.getElementById("summaryConfidenceValue");
+const summaryContradictionValue = document.getElementById("summaryContradictionValue");
 const analysisProgressPill = document.getElementById("analysisProgressPill");
 const analysisCaptureStatus = document.getElementById("analysisCaptureStatus");
 const analysisActionTitle = document.getElementById("analysisActionTitle");
@@ -55,6 +62,7 @@ const optionTemplate = document.getElementById("optionTemplate");
 const insightSteps = Array.from(document.querySelectorAll("[data-insight-step]"));
 const analysisSourceCards = Array.from(document.querySelectorAll("[data-source-card]"));
 const traceChips = Array.from(document.querySelectorAll("[data-trace-source]"));
+const summarySegments = Array.from(document.querySelectorAll("[data-summary-card]"));
 
 const stakeholderCards = {
   tester: document.querySelector('[data-stakeholder-card="tester"]'),
@@ -103,6 +111,8 @@ const defaultState = () => ({
   stage: "kickoff",
   reviewedSources: [],
   lastAnalysisFeedback: "",
+  synthesisStep: 0,
+  summaryMetricsAnimated: false,
   conversationLog: [],
   selections: {
     opening: null,
@@ -116,6 +126,7 @@ const defaultState = () => ({
 let state = defaultState();
 let hesitationTimer;
 let meetingIntroTimers = [];
+let summaryMetricTimers = [];
 
 function renderProgressLabel(screenKey) {
   let label = missionLabels[screenKey];
@@ -656,6 +667,90 @@ function updateHostLabels() {
   situationNarrative.textContent = "You now have enough context to lead the meeting.";
 }
 
+function clearSummaryMetricAnimation() {
+  summaryMetricTimers.forEach((timerId) => clearTimeout(timerId));
+  summaryMetricTimers = [];
+}
+
+function formatSourceTrace(sourceIds) {
+  const sourceLabels = sourceIds
+    .map((sourceId) => analysisSourceLabels[sourceId])
+    .filter(Boolean);
+
+  if (!sourceLabels.length) {
+    return "Referenced from reviewed source signals.";
+  }
+
+  if (sourceLabels.length === 1) {
+    return `Referenced from reviewed ${sourceLabels[0]}.`;
+  }
+
+  return `Referenced from reviewed ${sourceLabels.slice(0, -1).join(", ")} and ${sourceLabels.at(-1)}.`;
+}
+
+function showTraceSources(sourceIds) {
+  traceNote.textContent = formatSourceTrace(sourceIds);
+  traceNote.classList.remove("hidden");
+  traceNote.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function setSummaryMetricsStatic() {
+  if (summarySignalsReviewedValue) {
+    summarySignalsReviewedValue.textContent = "3/3";
+  }
+  if (summaryConfidenceValue) {
+    summaryConfidenceValue.textContent = "High";
+  }
+  if (summaryContradictionValue) {
+    summaryContradictionValue.textContent = "Yes";
+    summaryContradictionValue.classList.add("is-live");
+  }
+}
+
+function animateSummaryMetrics() {
+  clearSummaryMetricAnimation();
+
+  if (summarySignalsReviewedValue) {
+    summarySignalsReviewedValue.textContent = "0/3";
+  }
+  if (summaryConfidenceValue) {
+    summaryConfidenceValue.textContent = "Calibrating";
+  }
+  if (summaryContradictionValue) {
+    summaryContradictionValue.textContent = "Scanning";
+    summaryContradictionValue.classList.remove("is-live");
+  }
+
+  ["1/3", "2/3", "3/3"].forEach((value, index) => {
+    summaryMetricTimers.push(
+      setTimeout(() => {
+        if (summarySignalsReviewedValue) {
+          summarySignalsReviewedValue.textContent = value;
+        }
+      }, 240 * (index + 1))
+    );
+  });
+
+  summaryMetricTimers.push(
+    setTimeout(() => {
+      if (summaryConfidenceValue) {
+        summaryConfidenceValue.textContent = "High";
+      }
+    }, 860)
+  );
+
+  summaryMetricTimers.push(
+    setTimeout(() => {
+      if (summaryContradictionValue) {
+        summaryContradictionValue.textContent = "Yes";
+        summaryContradictionValue.classList.add("is-live");
+      }
+    }, 1080)
+  );
+
+  state.summaryMetricsAnimated = true;
+}
+
 function updateIdentityShift() {
   const playerName = playerNameInput.value.trim();
 
@@ -734,6 +829,40 @@ function renderAnalysisAction() {
   analysisSignalHint.textContent = "Other signals may provide additional context.";
 }
 
+function renderSummarySequence() {
+  const revealedInsightCount = Math.max(0, Math.min(state.synthesisStep, 4));
+
+  if (summaryProgressPill) {
+    summaryProgressPill.textContent = `${revealedInsightCount}/4 insights revealed`;
+  }
+
+  if (briefingLaunchCard) {
+    briefingLaunchCard.classList.toggle("hidden", state.synthesisStep > 0);
+  }
+
+  if (summaryTensionValue) {
+    summaryTensionValue.textContent = tensionLabel.textContent;
+  }
+
+  summarySegments.forEach((segment) => {
+    const step = Number(segment.dataset.summaryCard || "0");
+    const isRevealed = state.synthesisStep >= step;
+    const isCurrent = step > 0 && state.synthesisStep === step && step < 5;
+    const isComplete = isRevealed && state.synthesisStep > step;
+
+    segment.classList.toggle("hidden", !isRevealed);
+    segment.classList.toggle("is-revealed", isRevealed);
+    segment.classList.toggle("is-current", isCurrent);
+    segment.classList.toggle("is-complete", isComplete);
+  });
+
+  if (!state.summaryMetricsAnimated) {
+    animateSummaryMetrics();
+  } else {
+    setSummaryMetricsStatic();
+  }
+}
+
 function renderAnalysisView() {
   renderAnalysisHeader();
   renderAnalysisSources();
@@ -741,8 +870,14 @@ function renderAnalysisView() {
   analysisDiscoveryView.classList.toggle("hidden", state.aiSummaryShown);
   summaryPanel.classList.toggle("hidden", !state.aiSummaryShown);
   if (!state.aiSummaryShown) {
+    clearSummaryMetricAnimation();
+    if (briefingLaunchCard) {
+      briefingLaunchCard.classList.remove("hidden");
+    }
     traceNote.textContent = "";
     traceNote.classList.add("hidden");
+  } else {
+    renderSummarySequence();
   }
   if (screens.analysis.classList.contains("screen-active")) {
     renderProgressLabel("analysis");
@@ -1373,6 +1508,7 @@ function getManualAssistContext() {
 
 function resetSimulation({ destination = "landing", preserveName = false } = {}) {
   const preservedName = preserveName ? state.playerName : "";
+  clearSummaryMetricAnimation();
   state = defaultState();
   if (preservedName) {
     state.playerName = preservedName;
@@ -1529,12 +1665,18 @@ summariseButton.addEventListener("click", () => {
   }
 
   state.aiSummaryShown = true;
+  state.synthesisStep = 0;
+  state.summaryMetricsAnimated = false;
+  clearSummaryMetricAnimation();
   renderAnalysisView();
   summaryPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 reviewSignalsButton?.addEventListener("click", () => {
   state.aiSummaryShown = false;
+  state.synthesisStep = 0;
+  state.summaryMetricsAnimated = false;
+  clearSummaryMetricAnimation();
   renderAnalysisView();
   analysisDiscoveryView.scrollIntoView({ behavior: "smooth", block: "start" });
 });
@@ -1547,12 +1689,39 @@ enterMeetingButton.addEventListener("click", () => {
   startMeeting();
 });
 
+revealInsightButton?.addEventListener("click", () => {
+  state.synthesisStep = 1;
+  renderAnalysisView();
+});
+
+summaryPanel.addEventListener("click", (event) => {
+  const viewSourceButton = event.target.closest("[data-summary-sources]");
+  if (viewSourceButton instanceof HTMLElement) {
+    const sourceIds = (viewSourceButton.dataset.summarySources || "")
+      .split(",")
+      .map((sourceId) => sourceId.trim())
+      .filter(Boolean);
+
+    showTraceSources(sourceIds);
+    return;
+  }
+
+  const continueButton = event.target.closest("[data-next-step]");
+  if (continueButton instanceof HTMLElement) {
+    const nextStep = Number(continueButton.dataset.nextStep || "0");
+    if (nextStep > 0) {
+      state.synthesisStep = nextStep;
+      renderAnalysisView();
+      const nextSegment = summaryPanel.querySelector(`[data-summary-card="${nextStep}"]`);
+      nextSegment?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+});
+
 traceChips.forEach((chip) => {
   chip.addEventListener("click", () => {
     const sourceId = chip.dataset.traceSource;
-    const sourceLabel = analysisSourceLabels[sourceId] || "source";
-    traceNote.textContent = `Referenced from reviewed ${sourceLabel}.`;
-    traceNote.classList.remove("hidden");
+    showTraceSources(sourceId ? [sourceId] : []);
   });
 });
 

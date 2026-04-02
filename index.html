@@ -318,14 +318,41 @@
 
           <section class="analysis-output hidden" id="summaryPanel">
             <section class="analysis-summary-main panel">
-              <p class="section-tag">AI Consolidated View</p>
-              <h3>Consolidated Situation View</h3>
-              <p class="analysis-summary-intro">
-                Based on the reviewed signals, three key patterns have emerged.
-              </p>
+              <div class="summary-briefing-head">
+                <p class="section-tag">Mission Briefing</p>
+                <h3>Consolidated Situation View</h3>
+                <p class="analysis-summary-intro">
+                  AI has processed the reviewed signals into a clearer mission picture.
+                  Reveal the briefing one step at a time before you lead the meeting.
+                </p>
+                <span class="analysis-progress-pill summary-progress-pill" id="summaryProgressPill">
+                  0/4 insights revealed
+                </span>
+              </div>
+
+              <article class="briefing-launch-card" id="briefingLaunchCard">
+                <p class="finding-kicker">Signal Synthesis Ready</p>
+                <h4>AI has identified the first key signal...</h4>
+                <p>
+                  Start the briefing to reveal each critical signal progressively and see
+                  where the real tension is building.
+                </p>
+                <button
+                  class="primary-button hero-cta analysis-cta"
+                  id="revealInsightButton"
+                  type="button"
+                  style="cursor: pointer;"
+                >
+                  Reveal insight
+                </button>
+              </article>
 
               <div class="synthesis-findings">
-                <article class="synthesis-finding finding-risk reveal-step reveal-step-1">
+                <article class="synthesis-finding finding-risk summary-segment" data-summary-card="1">
+                  <div class="signal-card-topline">
+                    <span class="signal-strength signal-risk">&#128308; High Risk Signal</span>
+                    <span class="signal-step-label">Signal 1</span>
+                  </div>
                   <p class="finding-kicker">Key Finding 1</p>
                   <h4>High-severity defects require attention</h4>
                   <p>
@@ -340,9 +367,32 @@
                       Team Chat
                     </button>
                   </div>
+                  <div class="signal-confirmation">
+                    <p>Do you want to explore this signal further?</p>
+                    <div class="signal-confirmation-actions">
+                      <button
+                        class="secondary-button summary-view-source"
+                        data-summary-sources="defect,chat"
+                        type="button"
+                      >
+                        View Source
+                      </button>
+                      <button class="primary-button summary-continue" data-next-step="2" type="button">
+                        Continue
+                      </button>
+                    </div>
+                  </div>
+                  <p class="signal-logged">Signal captured.</p>
                 </article>
 
-                <article class="synthesis-finding finding-pressure reveal-step reveal-step-2">
+                <article
+                  class="synthesis-finding finding-pressure summary-segment"
+                  data-summary-card="2"
+                >
+                  <div class="signal-card-topline">
+                    <span class="signal-strength signal-pressure">&#128992; Pressure Signal</span>
+                    <span class="signal-step-label">Signal 2</span>
+                  </div>
                   <p class="finding-kicker">Key Finding 2</p>
                   <h4>Delivery expectations are already in motion</h4>
                   <p>
@@ -354,9 +404,32 @@
                       Stakeholder Emails
                     </button>
                   </div>
+                  <div class="signal-confirmation">
+                    <p>Do you want to explore this signal further?</p>
+                    <div class="signal-confirmation-actions">
+                      <button
+                        class="secondary-button summary-view-source"
+                        data-summary-sources="email"
+                        type="button"
+                      >
+                        View Source
+                      </button>
+                      <button class="primary-button summary-continue" data-next-step="3" type="button">
+                        Continue
+                      </button>
+                    </div>
+                  </div>
+                  <p class="signal-logged">Pressure signal recorded.</p>
                 </article>
 
-                <article class="synthesis-finding finding-balance reveal-step reveal-step-3">
+                <article
+                  class="synthesis-finding finding-balance summary-segment"
+                  data-summary-card="3"
+                >
+                  <div class="signal-card-topline">
+                    <span class="signal-strength signal-decision">&#128993; Decision Signal</span>
+                    <span class="signal-step-label">Signal 3</span>
+                  </div>
                   <p class="finding-kicker">Key Finding 3</p>
                   <h4>The team is facing a trade-off</h4>
                   <p>
@@ -374,33 +447,84 @@
                       Stakeholder Emails
                     </button>
                   </div>
+                  <div class="signal-confirmation">
+                    <p>Do you want to explore this signal further?</p>
+                    <div class="signal-confirmation-actions">
+                      <button
+                        class="secondary-button summary-view-source"
+                        data-summary-sources="defect,chat,email"
+                        type="button"
+                      >
+                        View Source
+                      </button>
+                      <button class="primary-button summary-continue" data-next-step="4" type="button">
+                        Continue
+                      </button>
+                    </div>
+                  </div>
+                  <p class="signal-logged">Trade-off mapped.</p>
                 </article>
               </div>
 
-              <article class="ai-interpretation panel reveal-step reveal-step-4">
-                <p class="finding-kicker">AI Interpretation</p>
-                <p>
-                  The strongest tension detected is between release commitment and
-                  unresolved customer-impacting risk.
-                </p>
+              <article class="ai-interpretation summary-segment" data-summary-card="4">
+                <div class="signal-card-topline">
+                  <span class="signal-strength signal-recommendation">&#9889; AI Recommendation</span>
+                  <span class="signal-step-label">Synthesis</span>
+                </div>
+                <p class="finding-kicker">What matters most now</p>
+                <h4>The strongest tension is between release commitment and customer risk.</h4>
+                <ul class="recommendation-tension-list">
+                  <li>Release commitment</li>
+                  <li>Unresolved customer-impacting risk</li>
+                </ul>
                 <p>
                   A structured discussion will be needed to align the team on whether to
                   proceed, delay, or adjust the release approach.
                 </p>
+                <div class="signal-confirmation">
+                  <p>Do you want to explore this signal further?</p>
+                  <div class="signal-confirmation-actions">
+                    <button
+                      class="secondary-button summary-view-source"
+                      data-summary-sources="defect,chat,email"
+                      type="button"
+                    >
+                      View Source
+                    </button>
+                    <button class="primary-button summary-continue" data-next-step="5" type="button">
+                      Continue
+                    </button>
+                  </div>
+                </div>
+                <p class="signal-logged">Recommendation locked in.</p>
               </article>
 
-              <div class="summary-cta-block reveal-step reveal-step-5">
+              <div class="summary-cta-block summary-segment" data-summary-card="5">
+                <div class="readiness-feedback">
+                  <article class="readiness-pill">
+                    <span aria-hidden="true">&#9989;</span>
+                    <p>You have reviewed all critical signals</p>
+                  </article>
+                  <article class="readiness-pill readiness-pill-alert">
+                    <span aria-hidden="true">&#9888;</span>
+                    <p>Tension detected: <strong id="summaryTensionValue">Medium</strong></p>
+                  </article>
+                  <article class="readiness-pill">
+                    <span aria-hidden="true">&#127919;</span>
+                    <p>Your decision will shape the outcome</p>
+                  </article>
+                </div>
                 <p class="summary-cta-support" id="situationNarrative">
                   You now have enough context to lead the meeting.
                 </p>
                 <div class="summary-cta-actions">
                   <button
-                    class="primary-button"
+                    class="primary-button hero-cta analysis-cta"
                     id="enterMeetingButton"
                     type="button"
                     style="cursor: pointer;"
                   >
-                    Continue to Meeting Brief
+                    Enter the Meeting
                   </button>
                   <button class="text-link-button" id="reviewSignalsButton" type="button">
                     Review signals again
@@ -410,16 +534,27 @@
             </section>
 
             <aside class="analysis-summary-side">
-              <article class="panel summary-side-card reveal-step reveal-step-2">
+              <article class="panel summary-side-card summary-side-card-confidence">
                 <p class="section-tag">Source Confidence</p>
                 <ul class="summary-meta-list">
-                  <li><span>Signals reviewed</span><strong>3 of 3</strong></li>
-                  <li><span>Confidence in synthesis</span><strong>High</strong></li>
-                  <li><span>Contradictory pressure detected</span><strong>Yes</strong></li>
+                  <li>
+                    <span>Signals reviewed</span>
+                    <strong id="summarySignalsReviewedValue">0/3</strong>
+                  </li>
+                  <li>
+                    <span>Confidence in synthesis</span>
+                    <strong id="summaryConfidenceValue">Calibrating</strong>
+                  </li>
+                  <li>
+                    <span>Contradiction detected</span>
+                    <strong id="summaryContradictionValue" class="contradiction-indicator">
+                      Scanning
+                    </strong>
+                  </li>
                 </ul>
               </article>
 
-              <article class="panel summary-side-card reveal-step reveal-step-3">
+              <article class="panel summary-side-card">
                 <p class="section-tag">What the system prioritised</p>
                 <ul class="summary-list compact-list">
                   <li>Potential customer impact</li>
@@ -428,8 +563,8 @@
                 </ul>
               </article>
 
-              <article class="panel summary-side-card reveal-step reveal-step-4">
-                <p class="section-tag">Meeting Readiness Check</p>
+              <article class="panel summary-side-card">
+                <p class="section-tag">Meeting Readiness</p>
                 <ul class="readiness-list">
                   <li class="is-ready">Situation understood</li>
                   <li class="is-ready">Conflict detected</li>
