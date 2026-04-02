@@ -2136,6 +2136,35 @@ input[type="text"]::placeholder {
   line-height: 1.62;
 }
 
+.meeting-copilot-toggle {
+  position: absolute;
+  right: 28px;
+  bottom: 30px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(127, 209, 194, 0.26);
+  background:
+    linear-gradient(180deg, rgba(127, 209, 194, 0.16), rgba(127, 209, 194, 0.08)),
+    rgba(8, 22, 29, 0.82);
+  color: var(--accent-strong);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+}
+
+.meeting-copilot-toggle.has-alert {
+  animation: copilot-pulse 2.8s ease-in-out infinite;
+}
+
+.meeting-copilot-toggle.is-open {
+  border-color: rgba(127, 209, 194, 0.4);
+  background:
+    linear-gradient(180deg, rgba(127, 209, 194, 0.22), rgba(127, 209, 194, 0.12)),
+    rgba(8, 22, 29, 0.9);
+}
+
 .meeting-copilot-panel {
   position: absolute;
   top: 28px;
@@ -2143,6 +2172,12 @@ input[type="text"]::placeholder {
   z-index: 2;
   width: min(340px, calc(100% - 56px));
   padding: 22px 24px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
   backdrop-filter: blur(16px);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 48%),
@@ -2150,6 +2185,12 @@ input[type="text"]::placeholder {
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.22),
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.meeting-copilot-panel.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .meeting-room {
@@ -2257,6 +2298,16 @@ input[type="text"]::placeholder {
   box-shadow: 0 18px 34px rgba(127, 209, 194, 0.14);
 }
 
+.stakeholder-card.is-typing {
+  transform: var(--station-transform) translateY(-2px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 12px 28px rgba(255, 255, 255, 0.08);
+}
+
+.stakeholder-card.is-typing .stakeholder-avatar-ring {
+  animation-duration: 1.6s;
+}
+
 .stakeholder-card h4 {
   margin: 0 0 6px;
   font-size: 1.28rem;
@@ -2352,7 +2403,10 @@ input[type="text"]::placeholder {
 .conversation-feed {
   display: grid;
   gap: 14px;
-  min-height: 220px;
+  min-height: 280px;
+  max-height: 680px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .conversation-message {
@@ -2376,8 +2430,20 @@ input[type="text"]::placeholder {
   border-color: rgba(127, 209, 194, 0.18);
 }
 
+.conversation-message.is-interrupt {
+  margin-top: -2px;
+  border-color: rgba(255, 166, 102, 0.18);
+  background: rgba(255, 166, 102, 0.08);
+}
+
 .conversation-message.stakeholder {
   justify-self: start;
+}
+
+.typing-indicator {
+  justify-self: start;
+  width: fit-content;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .conversation-speaker {
@@ -2400,6 +2466,99 @@ input[type="text"]::placeholder {
   color: var(--muted);
 }
 
+.typing-label {
+  margin-right: 10px;
+}
+
+.typing-dots {
+  display: inline-flex;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.typing-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(127, 209, 194, 0.78);
+  animation: typing-bounce 900ms ease-in-out infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.conversation-prompt-card {
+  justify-self: stretch;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(127, 209, 194, 0.18);
+  background:
+    linear-gradient(135deg, rgba(127, 209, 194, 0.12), transparent 54%),
+    rgba(7, 20, 26, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(127, 209, 194, 0.04);
+}
+
+.conversation-prompt-card h4 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.conversation-prompt-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.conversation-prompt-eyebrow {
+  margin-bottom: 10px;
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.conversation-prompt-helper {
+  margin-top: 10px;
+  color: var(--accent-strong);
+}
+
+.conversation-choice-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.conversation-choice-button {
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 80%),
+    rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  padding: 14px 16px;
+}
+
+.conversation-choice-button strong {
+  margin-bottom: 5px;
+  font-size: 0.98rem;
+}
+
+.conversation-choice-button .option-badge {
+  margin-bottom: 8px;
+  padding: 4px 9px;
+  font-size: 0.72rem;
+}
+
+.conversation-choice-button .option-preview {
+  margin-top: 6px;
+  font-size: 0.86rem;
+}
+
 .assistant-list {
   margin-bottom: 0;
 }
@@ -2415,7 +2574,7 @@ input[type="text"]::placeholder {
 }
 
 .decision-panel {
-  min-height: 250px;
+  display: none;
 }
 
 .decision-panel h3 {
@@ -2510,6 +2669,10 @@ input[type="text"]::placeholder {
 .option-button:focus-visible .option-badge {
   background: rgba(240, 189, 117, 0.14);
   color: #ffe0b5;
+}
+
+.meeting-pill.is-shifting {
+  animation: tension-shift 900ms ease;
 }
 
 .response-feedback {
@@ -2854,6 +3017,11 @@ input[type="text"]::placeholder {
     background-size: cover;
   }
 
+  .meeting-copilot-toggle {
+    bottom: 24px;
+    right: 24px;
+  }
+
   .meeting-room {
     min-height: 980px;
     padding: 134px 24px 24px;
@@ -2987,6 +3155,13 @@ input[type="text"]::placeholder {
     right: auto;
     width: 100%;
     margin: 20px 0 22px;
+  }
+
+  .meeting-copilot-toggle {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    margin-top: 16px;
   }
 
   .meeting-room {
@@ -3137,8 +3312,54 @@ input[type="text"]::placeholder {
     padding: 22px;
   }
 
-  .primary-button,
+.primary-button,
   .secondary-button {
     width: 100%;
+  }
+}
+
+@keyframes typing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+@keyframes tension-shift {
+  0% {
+    box-shadow: 0 0 0 rgba(127, 209, 194, 0);
+    transform: translateY(0);
+  }
+
+  30% {
+    box-shadow: 0 0 0 10px rgba(127, 209, 194, 0.12);
+    transform: translateY(-1px);
+  }
+
+  100% {
+    box-shadow: 0 0 0 rgba(127, 209, 194, 0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes copilot-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+  }
+
+  50% {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow:
+      0 18px 34px rgba(0, 0, 0, 0.24),
+      0 0 0 10px rgba(127, 209, 194, 0.08);
   }
 }

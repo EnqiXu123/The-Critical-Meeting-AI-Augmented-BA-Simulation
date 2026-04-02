@@ -46,9 +46,11 @@ const meetingIntroSecondary = document.getElementById("meetingIntroSecondary");
 const conversationTitle = document.getElementById("conversationTitle");
 const conversationFeed = document.getElementById("conversationFeed");
 const decisionPanel = document.getElementById("decisionPanel");
+const assistantPanel = document.getElementById("assistantPanel");
 const assistantHeading = document.getElementById("assistantHeading");
 const assistantContent = document.getElementById("assistantContent");
 const aiAssistButton = document.getElementById("aiAssistButton");
+const closeCopilotButton = document.getElementById("closeCopilotButton");
 const notesList = document.getElementById("notesList");
 const tensionLabel = document.getElementById("tensionLabel");
 const scoreGrid = document.getElementById("scoreGrid");
@@ -124,6 +126,11 @@ const defaultState = () => ({
   synthesisStep: 0,
   summaryMetricsAnimated: false,
   conversationLog: [],
+  typingIndicators: [],
+  activePrompt: null,
+  activeSpeakerKey: "",
+  copilotOpen: false,
+  stageStatus: "Room coming online",
   lastAssistContext: {
     title: "AI Copilot",
     lines: [],
@@ -150,6 +157,9 @@ let state = defaultState();
 let hesitationTimer;
 let meetingIntroTimers = [];
 let summaryMetricTimers = [];
+let conversationFlowTimers = [];
+let conversationFlowToken = 0;
+let tensionShiftTimer;
 
 function renderProgressLabel(screenKey) {
   let label = missionLabels[screenKey];
@@ -952,8 +962,25 @@ function applyMeetingDelta(delta = {}) {
 
 function updateTension() {
   const tension = getTensionText();
+  const previous = tensionLabel.textContent;
   tensionLabel.textContent = tension;
   tensionPill.dataset.level = tension.toLowerCase();
+  if (previous && previous !== tension) {
+    tensionPill.classList.remove("is-shifting");
+    void tensionPill.offsetWidth;
+    tensionPill.classList.add("is-shifting");
+    clearTimeout(tensionShiftTimer);
+    const direction =
+      (previous === "Low" && tension !== "Low") ||
+      (previous === "Medium" && tension === "High")
+        ? "\u2191"
+        : "\u2193";
+    meetingStatusLabel.textContent = `Tension ${direction} ${tension}`;
+    tensionShiftTimer = setTimeout(() => {
+      tensionPill.classList.remove("is-shifting");
+      meetingStatusLabel.textContent = state.stageStatus || "Room active";
+    }, 1200);
+  }
 }
 
 function buildRoomReactions(overrides = {}) {
@@ -995,9 +1022,8 @@ function renderReactions() {
 }
 
 function highlightSpeaker(stakeholderKey) {
-  Object.entries(stakeholderCards).forEach(([key, card]) => {
-    card.classList.toggle("is-speaking", key === stakeholderKey);
-  });
+  state.activeSpeakerKey = stakeholderKey || "";
+  renderStakeholderActivity();
 }
 
 function getPlayerName() {
@@ -1013,6 +1039,13 @@ function clearMeetingIntroSequence() {
   meetingIntroTimers = [];
 }
 
+function clearConversationFlow() {
+  conversationFlowToken += 1;
+  conversationFlowTimers.forEach((timerId) => clearTimeout(timerId));
+  conversationFlowTimers = [];
+  state.typingIndicators = [];
+}
+
 function setMeetingStage({ tag, title, subtitle, status }) {
   if (tag) {
     meetingStepTag.textContent = tag;
@@ -1024,6 +1057,7 @@ function setMeetingStage({ tag, title, subtitle, status }) {
     meetingStageSubtitle.textContent = subtitle;
   }
   if (status) {
+    state.stageStatus = status;
     meetingStatusLabel.textContent = status;
   }
 }
@@ -1040,58 +1074,194 @@ function addConversationEntries(entries) {
   entries.forEach((entry) => addConversationEntry(entry));
 }
 
-function renderConversation(title, entries = state.conversationLog.slice(-4)) {
+function getSpeakerKey(speaker) {
+  const map = {
+    Sarah: "tester",
+    James: "productOwner",
+    Daniel: "techLead",
+    Emily: "projectManager",
+  };
+
+  return map[speaker] || "";
+}
+
+function renderStakeholderActivity() {
+  const typingKeys = state.typingIndicators.map((indicator) => indicator.key).filter(Boolean);
+
+  Object.entries(stakeholderCards).forEach(([key, card]) => {
+    card.classList.toggle("is-speaking", key === state.activeSpeakerKey);
+    card.classList.toggle("is-typing", typingKeys.includes(key));
+  });
+}
+
+function setTypingIndicators(indicators = []) {
+  state.typingIndicators = indicators;
+  renderStakeholderActivity();
+  renderConversation(conversationTitle.textContent || "Room feed");
+}
+
+function scrollConversationToBottom() {
+  requestAnimationFrame(() => {
+    conversationFeed.scrollTo({
+      top: conversationFeed.scrollHeight,
+      behavior: "smooth",
+    });
+  });
+}
+
+function renderConversationPrompt() {
+  if (!state.activePrompt) {
+    return null;
+  }
+
+  const wrapper = document.createElement("section");
+  wrapper.className = "conversation-prompt-card";
+
+  const promptMarkup = [];
+  if (state.activePrompt.eyebrow) {
+    promptMarkup.push(`<p class="conversation-prompt-eyebrow">${state.activePrompt.eyebrow}</p>`);
+  }
+  if (state.activePrompt.title) {
+    promptMarkup.push(`<h4>${state.activePrompt.title}</h4>`);
+  }
+  if (state.activePrompt.prompt) {
+    promptMarkup.push(`<p>${state.activePrompt.prompt}</p>`);
+  }
+  if (state.activePrompt.helper) {
+    promptMarkup.push(`<p class="conversation-prompt-helper">${state.activePrompt.helper}</p>`);
+  }
+
+  wrapper.innerHTML = promptMarkup.join("");
+
+  const actions = document.createElement("div");
+  actions.className = "conversation-choice-list";
+  state.activePrompt.options.forEach((optionNode) => {
+    optionNode.classList.add("conversation-choice-button");
+    actions.appendChild(optionNode);
+  });
+  wrapper.appendChild(actions);
+  return wrapper;
+}
+
+function renderConversation(title, entries = state.conversationLog) {
   conversationTitle.textContent = title;
   conversationFeed.innerHTML = "";
 
-  entries.forEach((entry) => {
+  entries.forEach((entry, index) => {
     const article = document.createElement("article");
+    const previousEntry = entries[index - 1];
+    const speakerLabel =
+      entry.variant === "host" ? `You (${entry.speaker})` : entry.speaker;
     article.className = `conversation-message ${entry.variant}`;
+    if (entry.variant === "stakeholder" && previousEntry?.variant === "stakeholder") {
+      article.classList.add("is-interrupt");
+    }
     article.innerHTML = `
-      <span class="conversation-speaker">${entry.speaker}</span>
+      <span class="conversation-speaker">${speakerLabel}</span>
       <p>${entry.text.replaceAll("\n", "<br><br>")}</p>
     `;
     conversationFeed.appendChild(article);
   });
+
+  state.typingIndicators.forEach((indicator) => {
+    const typingNode = document.createElement("article");
+    typingNode.className = "conversation-message typing-indicator";
+    typingNode.innerHTML = `
+      <span class="conversation-speaker">${indicator.speaker}</span>
+      <p>
+        <span class="typing-label">is typing</span>
+        <span class="typing-dots" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+      </p>
+    `;
+    conversationFeed.appendChild(typingNode);
+  });
+
+  const promptNode = renderConversationPrompt();
+  if (promptNode) {
+    conversationFeed.appendChild(promptNode);
+  }
+
+  renderStakeholderActivity();
+  scrollConversationToBottom();
 }
 
 function scheduleCopilotNudge(lines, title = "AI Copilot", delay = 4200) {
   clearHesitationNudge();
   hesitationTimer = setTimeout(() => {
     renderAssistant(title, lines);
+    if (
+      state.tension >= 3 ||
+      ["riskEscalation", "deliveryPressure", "technicalClarification"].includes(state.stage)
+    ) {
+      setCopilotOpen(true);
+    } else {
+      aiAssistButton?.classList.add("has-alert");
+    }
   }, delay);
 }
 
 function renderResponseShell({ eyebrow, title, prompt, helper, options }) {
-  decisionPanel.innerHTML = "";
+  state.activePrompt = {
+    eyebrow,
+    title,
+    prompt,
+    helper,
+    options: Array.from(options?.children || []),
+  };
+  decisionPanel.hidden = true;
+  renderConversation(conversationTitle.textContent || "Room feed");
+}
 
-  if (eyebrow) {
-    const eyebrowNode = document.createElement("p");
-    eyebrowNode.className = "response-eyebrow";
-    eyebrowNode.textContent = eyebrow;
-    decisionPanel.appendChild(eyebrowNode);
+function waitForConversationStep(ms, token = conversationFlowToken) {
+  return new Promise((resolve) => {
+    const timerId = setTimeout(() => {
+      resolve(token === conversationFlowToken);
+    }, ms);
+    conversationFlowTimers.push(timerId);
+  });
+}
+
+async function playConversationSequence(title, entries) {
+  const token = ++conversationFlowToken;
+  state.activePrompt = null;
+  setTypingIndicators([]);
+  renderConversation(title);
+
+  for (const entry of entries) {
+    const speakerKey = getSpeakerKey(entry.speaker);
+    const shouldType = entry.variant !== "system";
+
+    if (shouldType) {
+      setTypingIndicators([{ key: speakerKey, speaker: entry.speaker }]);
+      const keepGoing = await waitForConversationStep(entry.variant === "host" ? 260 : 620, token);
+      if (!keepGoing) {
+        return false;
+      }
+    } else {
+      const keepGoing = await waitForConversationStep(180, token);
+      if (!keepGoing) {
+        return false;
+      }
+    }
+
+    state.typingIndicators = [];
+    addConversationEntry(entry);
+    highlightSpeaker(speakerKey);
+    renderConversation(title);
+
+    const keepGoing = await waitForConversationStep(
+      entry.variant === "stakeholder" ? 240 : 160,
+      token
+    );
+    if (!keepGoing) {
+      return false;
+    }
   }
 
-  const titleNode = document.createElement("h3");
-  titleNode.textContent = title;
-  decisionPanel.appendChild(titleNode);
-
-  if (prompt) {
-    const promptNode = document.createElement("p");
-    promptNode.textContent = prompt;
-    decisionPanel.appendChild(promptNode);
-  }
-
-  if (helper) {
-    const helperNode = document.createElement("p");
-    helperNode.className = "helper-text";
-    helperNode.textContent = helper;
-    decisionPanel.appendChild(helperNode);
-  }
-
-  if (options) {
-    decisionPanel.appendChild(options);
-  }
+  setTypingIndicators([]);
+  return true;
 }
 
 function buildConversationCue(text) {
@@ -1371,6 +1541,19 @@ function renderAssistant(title, contentLines) {
     li.textContent = line;
     assistantContent.appendChild(li);
   });
+
+  if (!state.copilotOpen && screens.meeting.classList.contains("screen-active")) {
+    aiAssistButton?.classList.add("has-alert");
+  }
+}
+
+function setCopilotOpen(isOpen) {
+  state.copilotOpen = isOpen;
+  assistantPanel?.classList.toggle("is-open", isOpen);
+  aiAssistButton?.classList.toggle("is-open", isOpen);
+  if (isOpen) {
+    aiAssistButton?.classList.remove("has-alert");
+  }
 }
 
 function buildOptionButton(option, handler) {
@@ -1392,27 +1575,33 @@ function buildOptionButton(option, handler) {
       sibling.disabled = true;
     });
 
+    state.activePrompt = null;
+    renderConversation(conversationTitle.textContent || "Room feed");
     handler(option);
   });
   return button;
 }
 
 function renderFeedback(message, callback) {
-  const feedback = document.createElement("div");
-  feedback.className = "response-feedback";
-  feedback.textContent = message;
+  addConversationEntry({
+    speaker: "Room",
+    text: message,
+    variant: "system",
+  });
+  renderConversation(conversationTitle.textContent || "Room feed");
 
-  const continueButton = document.createElement("button");
-  continueButton.className = "primary-button";
-  continueButton.type = "button";
-  continueButton.textContent = "Continue";
-  continueButton.addEventListener("click", callback);
-
-  decisionPanel.append(feedback, continueButton);
+  const token = conversationFlowToken;
+  const timerId = setTimeout(() => {
+    if (token === conversationFlowToken) {
+      callback();
+    }
+  }, 900);
+  conversationFlowTimers.push(timerId);
 }
 
 function renderOpeningMove() {
   state.stage = "opening";
+  state.activePrompt = null;
   highlightSpeaker("");
   setMeetingStage({
     tag: "Opening Move",
@@ -1433,13 +1622,14 @@ function renderOpeningMove() {
 
   openingChoices.forEach((choice) => {
     options.appendChild(
-      buildOptionButton(choice, () => {
+      buildOptionButton(choice, async () => {
         clearHesitationNudge();
         state.selections.opening = choice.label;
         state.meetingContext.opening = choice.id;
         applyMeetingDelta(choice.delta);
         syncRoomReactions();
-        addConversationEntries([
+        addNotes(choice.notes);
+        const completed = await playConversationSequence("Opening responses", [
           {
             speaker: getPlayerName(),
             text: choice.text,
@@ -1447,8 +1637,9 @@ function renderOpeningMove() {
           },
           ...choice.reactions,
         ]);
-        addNotes(choice.notes);
-        renderConversation("Opening responses");
+        if (!completed) {
+          return;
+        }
         renderAssistant("AI Copilot", [
           ...choice.assistant,
           `Tension now: ${getTensionText()}.`,
@@ -1476,6 +1667,7 @@ function renderOpeningMove() {
 
 function renderChallengeRecovery() {
   state.stage = "challengeRecovery";
+  state.activePrompt = null;
   highlightSpeaker("projectManager");
   setMeetingStage({
     tag: "Tone Recovery",
@@ -1499,13 +1691,14 @@ function renderChallengeRecovery() {
 
   challengeRecoveryChoices.forEach((choice) => {
     options.appendChild(
-      buildOptionButton(choice, () => {
+      buildOptionButton(choice, async () => {
         clearHesitationNudge();
         state.selections.recovery = choice.label;
         state.meetingContext.recovery = choice.id;
         applyMeetingDelta(choice.delta);
         syncRoomReactions();
-        addConversationEntries([
+        addNotes(choice.notes);
+        const completed = await playConversationSequence("Recovery responses", [
           {
             speaker: getPlayerName(),
             text: choice.text,
@@ -1513,8 +1706,9 @@ function renderChallengeRecovery() {
           },
           ...choice.reactions,
         ]);
-        addNotes(choice.notes);
-        renderConversation("Recovery responses");
+        if (!completed) {
+          return;
+        }
         renderAssistant("AI Copilot", [
           ...choice.assistant,
           `Tension now: ${getTensionText()}.`,
@@ -1547,6 +1741,7 @@ function renderChallengeRecovery() {
 
 function renderFollowUpChoice(mode = "structured") {
   state.stage = "followupChoice";
+  state.activePrompt = null;
   const copy = followUpPromptCopy[mode] || followUpPromptCopy.structured;
 
   highlightSpeaker("");
@@ -1624,8 +1819,9 @@ function renderFollowUpChoice(mode = "structured") {
   });
 }
 
-function renderFollowUpNode(branchKey) {
+async function renderFollowUpNode(branchKey) {
   state.stage = "followup";
+  state.activePrompt = null;
   const branch = followUpBranches[branchKey];
 
   if (!branch) {
@@ -1642,7 +1838,8 @@ function renderFollowUpNode(branchKey) {
 
   applyMeetingDelta(branch.delta);
   syncRoomReactions();
-  addConversationEntries([
+  addNotes(branch.notes);
+  const completed = await playConversationSequence(branch.titleForFeed, [
     {
       speaker: getPlayerName(),
       text: branch.hostText,
@@ -1650,8 +1847,9 @@ function renderFollowUpNode(branchKey) {
     },
     ...branch.reactions,
   ]);
-  addNotes(branch.notes);
-  renderConversation(branch.titleForFeed);
+  if (!completed) {
+    return;
+  }
   renderAssistant("AI Copilot", branch.assistant);
   scheduleCopilotNudge(branch.assistant);
 
@@ -1660,12 +1858,13 @@ function renderFollowUpNode(branchKey) {
 
   branch.options.forEach((option) => {
     options.appendChild(
-      buildOptionButton(option, () => {
+      buildOptionButton(option, async () => {
         clearHesitationNudge();
         state.meetingContext.bridge = option.id;
         applyMeetingDelta(option.delta);
         syncRoomReactions();
-        addConversationEntries([
+        addNotes(option.notes);
+        const completed = await playConversationSequence(branch.titleForFeed, [
           {
             speaker: getPlayerName(),
             text: option.text,
@@ -1673,8 +1872,9 @@ function renderFollowUpNode(branchKey) {
           },
           ...option.reactions,
         ]);
-        addNotes(option.notes);
-        renderConversation(branch.titleForFeed);
+        if (!completed) {
+          return;
+        }
         renderAssistant("AI Copilot", [
           ...option.assistant,
           `Tension now: ${getTensionText()}.`,
@@ -1700,6 +1900,7 @@ function renderFollowUpNode(branchKey) {
 
 function renderFramingChoice() {
   state.stage = "framing";
+  state.activePrompt = null;
   highlightSpeaker("projectManager");
   setMeetingStage({
     tag: "Decision Framing",
@@ -1745,7 +1946,7 @@ function renderFramingChoice() {
     },
   ].forEach((option) => {
     options.appendChild(
-      buildOptionButton(option, () => {
+      buildOptionButton(option, async () => {
         clearHesitationNudge();
         state.selections.framing = option.label;
         state.meetingContext.framing = option.id;
@@ -1873,7 +2074,8 @@ function renderFramingChoice() {
 
         applyMeetingDelta(delta);
         syncRoomReactions();
-        addConversationEntries([
+        addNotes(notes);
+        const completed = await playConversationSequence("Framing responses", [
           {
             speaker: getPlayerName(),
             text: option.headline,
@@ -1881,8 +2083,9 @@ function renderFramingChoice() {
           },
           ...reactions,
         ]);
-        addNotes(notes);
-        renderConversation("Framing responses");
+        if (!completed) {
+          return;
+        }
         renderAssistant("AI Copilot", [
           ...assistantLines,
           `Tension now: ${getTensionText()}.`,
@@ -1934,6 +2137,7 @@ function renderRecommendationStage({
   helper = "Your recommendation will affect stakeholder trust, system risk, and business impact.",
 } = {}) {
   state.stage = "recommendation";
+  state.activePrompt = null;
   highlightSpeaker("projectManager");
   setMeetingStage({
     tag: "Final Recommendation",
@@ -1991,8 +2195,9 @@ function renderRecommendationStage({
   });
 }
 
-function renderTechnicalClarificationStage() {
+async function renderTechnicalClarificationStage() {
   state.stage = "technicalClarification";
+  state.activePrompt = null;
   highlightSpeaker("techLead");
   setMeetingStage({
     tag: "Technical Clarification",
@@ -2008,7 +2213,11 @@ function renderTechnicalClarificationStage() {
     stakeholderTrust: 1,
   });
   syncRoomReactions();
-  addConversationEntries([
+  addNotes([
+    "Daniel clarified that a narrower controlled release is the safer technical option.",
+    "Final recommendation now has stronger technical grounding.",
+  ]);
+  const completed = await playConversationSequence("Technical clarification", [
     {
       speaker: getPlayerName(),
       text: "Daniel, before we decide, give us the clearest technical read on the downside.",
@@ -2026,11 +2235,9 @@ function renderTechnicalClarificationStage() {
       variant: "stakeholder",
     },
   ]);
-  addNotes([
-    "Daniel clarified that a narrower controlled release is the safer technical option.",
-    "Final recommendation now has stronger technical grounding.",
-  ]);
-  renderConversation("Technical clarification");
+  if (!completed) {
+    return;
+  }
   renderAssistant("AI Copilot", [
     "That clarification improves decision confidence.",
     "A controlled release is now easier for the room to defend.",
@@ -2043,8 +2250,9 @@ function renderTechnicalClarificationStage() {
   });
 }
 
-function renderRiskRecentreStage() {
+async function renderRiskRecentreStage() {
   state.stage = "riskRecentre";
+  state.activePrompt = null;
   highlightSpeaker("tester");
   setMeetingStage({
     tag: "Risk Re-centre",
@@ -2062,7 +2270,11 @@ function renderRiskRecentreStage() {
     pmMood: "aligned",
   });
   syncRoomReactions();
-  addConversationEntries([
+  addNotes([
+    "Customer risk was explicitly re-centred before the final recommendation.",
+    "Tester confidence improved after the risk acknowledgement.",
+  ]);
+  const completed = await playConversationSequence("Risk re-centred", [
     {
       speaker: getPlayerName(),
       text:
@@ -2080,11 +2292,9 @@ function renderRiskRecentreStage() {
       variant: "stakeholder",
     },
   ]);
-  addNotes([
-    "Customer risk was explicitly re-centred before the final recommendation.",
-    "Tester confidence improved after the risk acknowledgement.",
-  ]);
-  renderConversation("Risk re-centred");
+  if (!completed) {
+    return;
+  }
   renderAssistant("AI Copilot", [
     "Good recovery. The room now has a more balanced decision basis.",
     "Make the recommendation while the trade-off is clear.",
@@ -2097,9 +2307,10 @@ function renderRiskRecentreStage() {
   });
 }
 
-function renderPathDecision() {
+async function renderPathDecision() {
   const path = resolveMeetingPath();
   state.meetingContext.path = path;
+  state.activePrompt = null;
 
   if (path === "alignment") {
     state.stage = "alignmentPath";
@@ -2113,15 +2324,17 @@ function renderPathDecision() {
 
     applyMeetingDelta({ pmMood: "aligned" });
     syncRoomReactions();
-    addConversationEntries([
+    addNotes(["Emily signalled that the room is closer to alignment."]);
+    const completed = await playConversationSequence("Alignment path", [
       {
         speaker: "Emily",
         text: "We're closer to alignment. What recommendation are you leaning toward?",
         variant: "stakeholder",
       },
     ]);
-    addNotes(["Emily signalled that the room is closer to alignment."]);
-    renderConversation("Alignment path");
+    if (!completed) {
+      return;
+    }
     renderAssistant("AI Copilot", [
       "The room is ready for a recommendation.",
       "A controlled release may balance both pressures most credibly.",
@@ -2145,7 +2358,10 @@ function renderPathDecision() {
 
     applyMeetingDelta({ pmMood: "active" });
     syncRoomReactions();
-    addConversationEntries([
+    addNotes([
+      "Risk discussion escalated and James pushed for a clearer release-blocking view.",
+    ]);
+    const completed = await playConversationSequence("Risk escalation", [
       {
         speaker: "James",
         text:
@@ -2163,10 +2379,9 @@ function renderPathDecision() {
         variant: "stakeholder",
       },
     ]);
-    addNotes([
-      "Risk discussion escalated and James pushed for a clearer release-blocking view.",
-    ]);
-    renderConversation("Risk escalation");
+    if (!completed) {
+      return;
+    }
     renderAssistant("AI Copilot", [
       "Acknowledge delivery pressure before making your call.",
       "If needed, ask Daniel for one final clarification to sharpen the choice.",
@@ -2235,7 +2450,10 @@ function renderPathDecision() {
 
   applyMeetingDelta({ pmMood: "active" });
   syncRoomReactions();
-  addConversationEntries([
+  addNotes([
+    "Sarah and Daniel both signalled that delivery pressure is outrunning risk clarity.",
+  ]);
+  const completed = await playConversationSequence("Delivery pressure path", [
     {
       speaker: "Sarah",
       text: "I need to be clear — I don't think the customer risk has been fully addressed.",
@@ -2252,10 +2470,9 @@ function renderPathDecision() {
       variant: "stakeholder",
     },
   ]);
-  addNotes([
-    "Sarah and Daniel both signalled that delivery pressure is outrunning risk clarity.",
-  ]);
-  renderConversation("Delivery pressure path");
+  if (!completed) {
+    return;
+  }
   renderAssistant("AI Copilot", [
     "Risk acknowledgement is needed before recommending release.",
     "A quick re-centre can improve confidence without losing momentum.",
@@ -2364,7 +2581,7 @@ function calculateOutcomeScores(recommendationKey) {
   };
 }
 
-function submitRecommendation(recommendationKey, overrides = {}) {
+async function submitRecommendation(recommendationKey, overrides = {}) {
   clearHesitationNudge();
 
   const recommendationConfig = {
@@ -2512,7 +2729,8 @@ function submitRecommendation(recommendationKey, overrides = {}) {
   syncRoomReactions({
     projectManager: { text: "Decision recorded", tone: "positive" },
   });
-  addConversationEntries([
+  addNotes(config.notes);
+  const completed = await playConversationSequence("Recommendation shared", [
     {
       speaker: getPlayerName(),
       text: overrides.hostText || config.hostText,
@@ -2520,8 +2738,9 @@ function submitRecommendation(recommendationKey, overrides = {}) {
     },
     ...config.reactions,
   ]);
-  addNotes(config.notes);
-  renderConversation("Recommendation shared");
+  if (!completed) {
+    return;
+  }
   renderAssistant("AI Copilot", [
     ...config.assistant,
     `Final room tension: ${getTensionText()}.`,
@@ -2690,17 +2909,24 @@ function getMeetingParticipants() {
 function resetMeetingRoomVisuals() {
   clearHesitationNudge();
   clearMeetingIntroSequence();
+  clearConversationFlow();
+  clearTimeout(tensionShiftTimer);
   meetingIntroOverlay.classList.remove("is-active");
   meetingIntroPrimary.textContent = "Connecting the room...";
   meetingIntroSecondary.textContent = "Mission control is preparing the discussion space.";
   conversationTitle.textContent = "Room feed";
   conversationFeed.innerHTML = "";
+  state.activePrompt = null;
+  state.activeSpeakerKey = "";
+  state.typingIndicators = [];
   getMeetingParticipants().forEach((card) => {
-    card.classList.remove("is-present", "is-speaking");
+    card.classList.remove("is-present", "is-speaking", "is-typing");
   });
+  renderStakeholderActivity();
 }
 
 function renderRoomHoldingPattern() {
+  state.activePrompt = null;
   renderConversation("Room feed", [
     {
       speaker: "System",
@@ -2765,9 +2991,11 @@ function resetSimulation({ destination = "landing", preserveName = false } = {})
   resetMeetingRoomVisuals();
   renderNotes();
   renderReactions();
+  setCopilotOpen(false);
   renderAssistant("AI Copilot", assistantKickoff);
+  aiAssistButton?.classList.remove("has-alert");
   updateTension();
-  decisionPanel.innerHTML = "";
+  decisionPanel.hidden = true;
   highlightSpeaker("");
   setMeetingStage({
     tag: "Live Meeting",
@@ -2834,11 +3062,14 @@ function startMeeting() {
   ];
   renderNotes();
   syncRoomReactions();
+  setCopilotOpen(false);
   updateTension();
   renderAssistant("AI Copilot", [
     "Your opening will shape the tone of the discussion.",
     "Use structure early if you want the room to align faster.",
   ]);
+  aiAssistButton?.classList.remove("has-alert");
+  decisionPanel.hidden = true;
   setMeetingStage({
     tag: "Mission Arrival",
     title: "Everyone is taking their seats.",
@@ -3009,6 +3240,11 @@ aiAssistButton.addEventListener("click", () => {
   clearHesitationNudge();
   const assistContext = getManualAssistContext();
   renderAssistant(assistContext.title, assistContext.lines);
+  setCopilotOpen(!state.copilotOpen);
+});
+
+closeCopilotButton?.addEventListener("click", () => {
+  setCopilotOpen(false);
 });
 
 tryAgainButton.addEventListener("click", () => {
@@ -3020,6 +3256,7 @@ returnHomeButton.addEventListener("click", () => {
 });
 
 renderReactions();
+setCopilotOpen(false);
 renderAssistant("AI Copilot", assistantKickoff);
 updateTension();
 updateHostLabels();
