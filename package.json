@@ -1,0 +1,14 @@
+{
+  "name": "the-critical-meeting-ai-augmented-ba-simulation",
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:meeting": "playwright test tests/meeting-room.spec.js",
+    "test:a11y": "playwright test tests/accessibility.spec.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "axe-core": "^4.11.2"
+  }
+}

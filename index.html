@@ -575,53 +575,8 @@
         </section>
 
         <section class="screen" id="meetingScreen" aria-labelledby="meetingTitle">
-          <div class="screen-header">
-            <div>
-              <p class="section-tag">Mission Phase 4</p>
-              <h2 id="meetingTitle">Meeting Room</h2>
-            </div>
-            <div class="meeting-meta">
-              <div class="meeting-pill" id="tensionPill">
-                <span>Meeting Tension</span>
-                <strong id="tensionLabel">Low</strong>
-              </div>
-              <div class="meeting-pill joined-pill" id="meetingStatusLabel">Room coming online</div>
-            </div>
-          </div>
-
           <div class="meeting-room-shell">
-            <section class="meeting-stage panel" aria-labelledby="stageTitle">
-              <div class="stage-copy">
-                <p class="section-tag" id="meetingStepTag">Meeting Kick-Off</p>
-                <h3 id="stageTitle">Everyone is looking at you to begin.</h3>
-                <p class="stage-subtitle" id="meetingStageSubtitle">
-                  Guide the discussion, frame the trade-offs, and use AI support when it helps.
-                </p>
-              </div>
-
-              <button class="meeting-copilot-toggle" id="aiAssistButton" type="button">
-                <span aria-hidden="true">&#128161;</span>
-                AI Assist
-              </button>
-
-              <article class="panel assistant-panel meeting-copilot-panel" id="assistantPanel">
-                <div class="panel-head">
-                  <div>
-                    <p class="section-tag">AI Copilot</p>
-                    <h3 id="assistantHeading">Suggested meeting structure</h3>
-                  </div>
-                  <button class="secondary-button" id="closeCopilotButton" type="button">
-                    Close
-                  </button>
-                </div>
-                <ul class="assistant-list" id="assistantContent">
-                  <li>State purpose</li>
-                  <li>Confirm who is represented in the room</li>
-                  <li>Define the problem</li>
-                  <li>Set the expected outcome</li>
-                </ul>
-              </article>
-
+            <section class="meeting-stage" aria-labelledby="meetingTitle">
               <div class="meeting-room" id="meetingRoom">
                 <div class="meeting-intro-overlay" id="meetingIntroOverlay" aria-live="polite">
                   <p class="meeting-intro-line" id="meetingIntroPrimary">Connecting the room...</p>
@@ -632,6 +587,58 @@
 
                 <div class="meeting-grid-lines" aria-hidden="true"></div>
 
+                <div class="meeting-content-wrap meeting-scene-content">
+                  <header class="meeting-header-overlay">
+                    <div class="meeting-header-copy">
+                      <p class="meeting-hero-label">AI-Augmented BA Simulation</p>
+                      <h2 class="meeting-hero-title" id="meetingTitle">The Critical Meeting</h2>
+                    </div>
+                    <div class="meeting-header-actions">
+                      <div class="meeting-meta">
+                        <div class="meeting-pill phase-pill">Mission Phase 4: Live Meeting</div>
+                        <div class="meeting-pill" id="tensionPill">
+                          <span>Meeting Tension</span>
+                          <strong id="tensionLabel">Low</strong>
+                        </div>
+                        <div class="meeting-pill joined-pill" id="meetingStatusLabel">
+                          Room coming online
+                        </div>
+                      </div>
+                      <div class="meeting-toggle-stack">
+                        <button
+                          class="meeting-copilot-toggle primary-button hero-cta"
+                          id="aiAssistButton"
+                          type="button"
+                        >
+                          <span aria-hidden="true">&#128161;</span>
+                          AI Assist
+                        </button>
+                        <button
+                          class="meeting-copilot-toggle primary-button hero-cta"
+                          id="aiMeetingNotesButton"
+                          type="button"
+                        >
+                          <span aria-hidden="true">&#128221;</span>
+                          AI Meeting Notes
+                        </button>
+                      </div>
+                    </div>
+                  </header>
+
+                  <div class="stage-copy" hidden>
+                    <p class="section-tag" id="meetingStepTag" hidden></p>
+                    <h3 id="stageTitle">Everyone is looking at you to begin.</h3>
+                    <p class="stage-subtitle" id="meetingStageSubtitle">
+                      Your opening will shape the tone of the room.
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+            </section>
+
+            <section class="stakeholder-strip" aria-label="Stakeholders in the room">
+              <div class="meeting-content-wrap">
                 <div class="stakeholder-grid">
                   <article class="stakeholder-card station-tester" data-stakeholder-card="tester">
                     <div class="stakeholder-avatar-ring role-amber">
@@ -709,31 +716,52 @@
             </section>
 
             <div class="meeting-layout">
-              <div class="meeting-main-panels">
-                <article class="panel conversation-panel" id="conversationPanel">
-                  <div class="panel-head">
-                    <div>
-                      <p class="section-tag">Live Conversation</p>
-                      <h3 id="conversationTitle">Room feed</h3>
+              <div class="meeting-content-wrap meeting-layout-grid">
+                <div class="meeting-main-panels">
+                  <article class="panel conversation-panel" id="conversationPanel">
+                    <div class="panel-head">
+                      <div>
+                        <p class="section-tag">Live Conversation</p>
+                        <h3 id="conversationTitle">Room feed</h3>
+                      </div>
                     </div>
-                  </div>
-                  <div class="conversation-feed" id="conversationFeed" aria-live="polite"></div>
-                </article>
+                    <div class="conversation-feed" id="conversationFeed" aria-live="polite"></div>
+                  </article>
 
-                <section class="decision-panel panel" id="decisionPanel" aria-live="polite"></section>
+                  <section class="decision-panel panel" id="decisionPanel" aria-live="polite"></section>
+                </div>
+
+                <aside class="meeting-sidebar">
+                  <article class="panel assistant-panel meeting-copilot-panel" id="assistantPanel">
+                    <div class="panel-head">
+                      <div>
+                        <p class="section-tag" id="assistantHeading">AI Assist</p>
+                      </div>
+                      <button class="secondary-button" id="closeCopilotButton" type="button">
+                        Close
+                      </button>
+                    </div>
+                    <ul class="assistant-list" id="assistantContent">
+                      <li>State purpose</li>
+                      <li>Confirm who is represented in the room</li>
+                      <li>Define the problem</li>
+                      <li>Set the expected outcome</li>
+                    </ul>
+                  </article>
+
+                  <article class="panel notes-panel" id="notesPanel">
+                    <div class="panel-head">
+                      <div>
+                        <p class="section-tag">AI Meeting Notes</p>
+                      </div>
+                      <button class="secondary-button" id="closeNotesButton" type="button">
+                        Close
+                      </button>
+                    </div>
+                    <ul id="notesList" class="notes-list" aria-live="polite"></ul>
+                  </article>
+                </aside>
               </div>
-
-              <aside class="meeting-sidebar">
-                <article class="panel notes-panel">
-                  <div class="panel-head">
-                    <div>
-                      <p class="section-tag">AI Meeting Notes</p>
-                      <h3>Live notes</h3>
-                    </div>
-                  </div>
-                  <ul id="notesList" class="notes-list" aria-live="polite"></ul>
-                </article>
-              </aside>
             </div>
           </div>
         </section>
