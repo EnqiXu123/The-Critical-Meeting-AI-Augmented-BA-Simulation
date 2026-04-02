@@ -106,6 +106,12 @@ button:hover *,
   margin-bottom: 30px;
 }
 
+.topbar-meta {
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+}
+
 .topbar h1,
 .hero-copy h2,
 .screen-header h2,
@@ -999,12 +1005,6 @@ input[type="text"]::placeholder {
   gap: 18px;
 }
 
-.analysis-header-actions {
-  display: grid;
-  gap: 10px;
-  justify-items: end;
-}
-
 .analysis-title-row {
   display: flex;
   align-items: center;
@@ -1026,7 +1026,7 @@ input[type="text"]::placeholder {
   text-transform: uppercase;
 }
 
-.analysis-back-button {
+.analysis-topbar-button {
   min-height: 46px;
   padding: 12px 16px;
   text-align: center;
@@ -2591,7 +2591,7 @@ input[type="text"]::placeholder {
     align-items: flex-start;
   }
 
-  .analysis-header-actions {
+  .topbar-meta {
     width: 100%;
     justify-items: start;
   }

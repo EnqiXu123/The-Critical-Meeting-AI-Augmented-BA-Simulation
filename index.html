@@ -13,9 +13,18 @@
           <p class="eyebrow">AI-Augmented BA Simulation</p>
           <h1>The Critical Meeting</h1>
         </div>
-        <div class="status-pill" id="progressLabel">
-          <span class="phase-icon" aria-hidden="true">&#128752;&#65039;</span>
-          Mission Phase 1: Briefing
+        <div class="topbar-meta">
+          <div class="status-pill" id="progressLabel">
+            <span class="phase-icon" aria-hidden="true">&#128752;&#65039;</span>
+            Mission Phase 1: Briefing
+          </div>
+          <button
+            class="secondary-button analysis-topbar-button hidden"
+            id="backToBriefingButton"
+            type="button"
+          >
+            Back to Mission Phase 1: Briefing
+          </button>
         </div>
       </header>
 
@@ -129,18 +138,9 @@
                   </span>
                 </div>
               </div>
-              <div class="analysis-header-actions">
-                <span class="analysis-state-badge hidden" id="analysisStateBadge">
-                  Consolidated View Ready
-                </span>
-                <button
-                  class="secondary-button analysis-back-button"
-                  id="backToBriefingButton"
-                  type="button"
-                >
-                  Back to Mission Phase 1: Briefing
-                </button>
-              </div>
+              <span class="analysis-state-badge hidden" id="analysisStateBadge">
+                Consolidated View Ready
+              </span>
             </div>
             <p class="screen-intro" id="analysisIntro">
               Review the signals before making a decision.

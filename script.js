@@ -514,6 +514,7 @@ function showScreen(screenKey) {
   Object.entries(screens).forEach(([key, screen]) => {
     screen.classList.toggle("screen-active", key === screenKey);
   });
+  backToBriefingButton?.classList.toggle("hidden", screenKey !== "analysis");
   renderProgressLabel(screenKey);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
