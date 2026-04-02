@@ -109,16 +109,38 @@ const defaultState = () => ({
   firstSpeaker: "",
   speakerQueue: [],
   currentRound: 0,
-  stage: "kickoff",
+  stage: "opening",
+  tension: 2,
+  testerMood: "concerned",
+  poMood: "impatient",
+  techLeadMood: "analytical",
+  pmMood: "neutral",
+  stakeholderTrust: 0,
+  riskFocus: 0,
+  deliveryFocus: 0,
+  facilitationScore: 0,
   reviewedSources: [],
   lastAnalysisFeedback: "",
   synthesisStep: 0,
   summaryMetricsAnimated: false,
   conversationLog: [],
+  lastAssistContext: {
+    title: "AI Copilot",
+    lines: [],
+  },
+  meetingContext: {
+    opening: "",
+    recovery: "",
+    followUp: "",
+    bridge: "",
+    framing: "",
+    path: "",
+  },
   selections: {
     opening: null,
-    problem: null,
-    outcome: null,
+    recovery: null,
+    followUp: null,
+    framing: null,
     recommendation: null,
   },
   aiSummaryShown: false,
@@ -142,382 +164,729 @@ function renderProgressLabel(screenKey) {
   `;
 }
 
-const kickoffSequence = [
-  {
-    id: "opening",
-    title: "How would you like to open the meeting?",
-    prompt:
-      "Choose an opening that sets direction and shows the room you are leading with structure.",
-    options: [
-      {
-        label: "Structured Opening",
-        headline: "Frame the room around readiness, risk, and decision-making.",
-        preview: "Calm, directive, and confidence-building.",
-        text:
-          "Thanks everyone for joining.\n\nToday we're here to review the readiness of the upcoming release.\n\nWe have representatives from product and technology.\n\nOur goal is to assess risks and agree on the best path forward.",
-        feedback: "Stakeholders react calmly and stay attentive to your direction.",
-        copilotAfter: "This approach sets a clear structure and lowers room friction.",
-        impacts: { trust: 10, risk: 0, business: 4 },
-        reactions: {
-          tester: { text: "Feels heard", tone: "positive" },
-          techLead: { text: "Aligned on structure", tone: "positive" },
-          productOwner: { text: "Listening closely", tone: "neutral" },
-        },
-      },
-      {
-        label: "Quick Check-in",
-        headline: "Open lightly and invite the room in without much structure.",
-        preview: "Neutral tone, but lighter control of the discussion.",
-        text:
-          "Hi everyone, thanks for joining.\n\nWe have some issues to discuss before release.",
-        feedback: "The room stays neutral, but your direction feels light.",
-        copilotAfter: "You acknowledged the room, but it may still need firmer structure.",
-        impacts: { trust: 3, risk: 0, business: 2 },
-        reactions: {
-          tester: { text: "Neutral", tone: "neutral" },
-          techLead: { text: "Waiting for clarity", tone: "neutral" },
-          productOwner: { text: "Focused on timing", tone: "neutral" },
-        },
-      },
-      {
-        label: "Direct Challenge",
-        headline: "Push immediately for status and urgency.",
-        preview: "High-pressure opening that may raise room tension.",
-        text: "Let's keep this quick. What's the status?",
-        feedback: "Some tension appears as stakeholders sense missing structure.",
-        copilotAfter: "This creates urgency, but you may need to rebuild trust quickly.",
-        impacts: { trust: -8, risk: 4, business: -2 },
-        reactions: {
-          tester: { text: "Tension rising", tone: "negative" },
-          techLead: { text: "Less confident", tone: "negative" },
-          productOwner: { text: "Impatient energy", tone: "negative" },
-        },
-      },
-    ],
-  },
-  {
-    id: "problem",
-    title: "How do you frame the problem?",
-    prompt: "Define the issue clearly so the discussion starts from the same facts.",
-    options: [
-      {
-        label: "Risk-First Framing",
-        preview: "Anchors the room in evidence and customer impact.",
-        text:
-          "There are several high-severity defects identified, and we need to assess their impact on release.",
-        feedback: "You anchor the conversation in evidence and impact.",
-        copilotAfter: "You positioned the discussion around facts, risk, and consequence.",
-        impacts: { trust: 8, risk: -6, business: 2 },
-        reactions: {
-          tester: { text: "Clear framing", tone: "positive" },
-          techLead: { text: "Technical risk acknowledged", tone: "positive" },
-          productOwner: { text: "Pressure still visible", tone: "neutral" },
-        },
-      },
-      {
-        label: "Deadline-First Framing",
-        preview: "Moves attention toward schedule pressure and delivery urgency.",
-        text: "We are under pressure to deliver this on time.",
-        feedback: "Delivery urgency is clear, but the risk picture becomes blurred.",
-        copilotAfter: "Delivery pressure is visible now, but risk may feel secondary.",
-        impacts: { trust: -2, risk: 8, business: 6 },
-        reactions: {
-          tester: { text: "Risk underplayed", tone: "negative" },
-          techLead: { text: "Concerned", tone: "negative" },
-          productOwner: { text: "Deadline recognised", tone: "positive" },
-        },
-      },
-      {
-        label: "Open Issue Scan",
-        preview: "Keeps the problem broad and less decisive.",
-        text: "There are some issues we need to go through.",
-        feedback: "The room keeps listening, but the problem remains vague.",
-        copilotAfter: "The room may need a sharper definition of the problem.",
-        impacts: { trust: -1, risk: 3, business: 0 },
-        reactions: {
-          tester: { text: "Needs specifics", tone: "neutral" },
-          techLead: { text: "Waiting on detail", tone: "neutral" },
-          productOwner: { text: "Still unclear", tone: "neutral" },
-        },
-      },
-    ],
-  },
-  {
-    id: "outcome",
-    title: "What outcome do you want from this meeting?",
-    prompt: "Set the decision standard early so the conversation has a destination.",
-    options: [
-      {
-        label: "Decision-Led Close",
-        preview: "Gives the room a clear destination and decision frame.",
-        text:
-          "By the end of this meeting, we should have a clear recommendation on whether to proceed, delay, or adjust the release.",
-        feedback: "You establish a crisp decision frame and improve confidence.",
-        copilotAfter: "This sets up a structured route to a recommendation.",
-        impacts: { trust: 10, risk: -2, business: 5 },
-        reactions: {
-          tester: { text: "Decision path is clear", tone: "positive" },
-          techLead: { text: "Good structure", tone: "positive" },
-          productOwner: { text: "Knows the decision goal", tone: "positive" },
-        },
-      },
-      {
-        label: "Collaborative Explore",
-        preview: "Keeps the room open and collaborative, but less tight.",
-        text: "Let's hear everyone's thoughts and decide.",
-        feedback: "The approach feels collaborative, but it leaves room for drift.",
-        copilotAfter: "The room has flexibility, but you may need firmer guardrails.",
-        impacts: { trust: 4, risk: 1, business: 2 },
-        reactions: {
-          tester: { text: "Collaborative", tone: "neutral" },
-          techLead: { text: "Acceptable", tone: "neutral" },
-          productOwner: { text: "Moderately aligned", tone: "neutral" },
-        },
-      },
-      {
-        label: "Loose Discussion",
-        preview: "Invites conversation without defining how it should end.",
-        text: "Let's just talk through the issues first.",
-        feedback: "The discussion risks staying open-ended and harder to land.",
-        copilotAfter: "You may need to tighten the decision goal to keep the room focused.",
-        impacts: { trust: -4, risk: 6, business: -1 },
-        reactions: {
-          tester: { text: "May lose focus", tone: "negative" },
-          techLead: { text: "Concerned about drift", tone: "negative" },
-          productOwner: { text: "Wants direction", tone: "negative" },
-        },
-      },
-    ],
-  },
-];
-
-const discussionOrder = ["tester", "productOwner", "techLead"];
-
-const discussionContent = {
+const stakeholderDirectory = {
   tester: {
-    speaker: "Tester",
-    dialogue:
-      "There are still 3 high-severity defects not fixed.\n\nTwo of them may affect existing customer outcomes if we release without further action.",
-    options: [
-      {
-        label: "Recommend Delay",
-        preview: "Protects customers, but raises delivery pressure immediately.",
-        text: "We should delay release until these are resolved.",
-        feedback: "The Tester appreciates the clarity, but business impact pressure rises.",
-        copilotAfter: "You reduced risk quickly, but the room will feel the delivery impact.",
-        impacts: { trust: 4, risk: -10, business: -8 },
-        reactions: {
-          tester: { text: "Feels supported", tone: "positive" },
-          productOwner: { text: "Concerned about delay", tone: "negative" },
-        },
-      },
-      {
-        label: "Test Acceptable Risk",
-        preview: "Keeps the timeline alive while probing tolerance for release.",
-        text: "Can we assess whether these risks are acceptable for release?",
-        feedback: "You keep options open, but the Tester wants deeper clarity.",
-        copilotAfter: "You preserved flexibility, but the room may still want sharper risk detail.",
-        impacts: { trust: 1, risk: 4, business: 4 },
-        reactions: {
-          tester: { text: "Needs more depth", tone: "neutral" },
-          productOwner: { text: "Timeline may still hold", tone: "positive" },
-        },
-      },
-      {
-        label: "Clarify Impact First",
-        preview: "Balances caution with structured assessment.",
-        text: "Let's understand the impact of each defect before making a decision.",
-        feedback: "You balance caution with structure and improve room confidence.",
-        copilotAfter: "This keeps the room analytical and lowers unnecessary tension.",
-        impacts: { trust: 8, risk: -7, business: 3 },
-        reactions: {
-          tester: { text: "Feels heard", tone: "positive" },
-          techLead: { text: "Supports structured assessment", tone: "positive" },
-          productOwner: { text: "Aware of trade-off", tone: "neutral" },
-        },
-      },
-    ],
-    noteLines: [
-      "Tester raised 3 unresolved high severity defects.",
-      "2 may impact existing customers.",
-      "Draft action: confirm impact and severity of each defect.",
-    ],
-    aiSuggestion:
-      "Suggested approach:\nClarify impact first before recommending release or delay.",
+    role: "Tester",
+    name: "Sarah Chen",
+    shortName: "Sarah",
   },
   productOwner: {
-    speaker: "Product Owner",
-    dialogue:
-      "We've already communicated the expected release timing to stakeholders.\n\nIf we delay now, it will create delivery impact and raise questions from the business side.",
-    options: [
-      {
-        label: "Re-center on Stability",
-        preview: "Pushes the room back toward customer impact and stability.",
-        text: "We should still prioritise stability and customer impact.",
-        feedback: "You protect customer outcomes, though delivery pressure remains sharp.",
-        copilotAfter: "You protected the risk conversation, but business pressure will stay active.",
-        impacts: { trust: 4, risk: -7, business: -6 },
-        reactions: {
-          productOwner: { text: "Understands the stance, but frustrated", tone: "negative" },
-          tester: { text: "Risk is being respected", tone: "positive" },
-        },
-      },
-      {
-        label: "Accept Timeline Risk",
-        preview: "Signals willingness to absorb risk for schedule protection.",
-        text: "We may need to accept some level of risk to meet the timeline.",
-        feedback: "Business urgency is acknowledged, but trust with technical stakeholders dips.",
-        copilotAfter: "You validated the timeline, but technical confidence may drop.",
-        impacts: { trust: -5, risk: 9, business: 8 },
-        reactions: {
-          productOwner: { text: "Timeline prioritised", tone: "positive" },
-          techLead: { text: "Risk concern grows", tone: "negative" },
-          tester: { text: "Feels risk is underweighted", tone: "negative" },
-        },
-      },
-      {
-        label: "Name the Trade-off",
-        preview: "Makes the tension explicit without taking sides too early.",
-        text: "Let's align on the trade-off between delivery impact and release risk.",
-        feedback: "You acknowledge pressure while keeping the group focused on trade-offs.",
-        copilotAfter: "This helps the room surface the real tension without escalating it.",
-        impacts: { trust: 9, risk: -3, business: 6 },
-        reactions: {
-          productOwner: { text: "Feels heard", tone: "positive" },
-          techLead: { text: "Trade-off is visible", tone: "positive" },
-          tester: { text: "Balanced framing", tone: "positive" },
-        },
-      },
-    ],
-    noteLines: [
-      "Product Owner raised delivery impact and stakeholder expectation concerns.",
-      "Draft action: clarify timeline impact and communication approach.",
-    ],
-    aiSuggestion:
-      "Suggested approach:\nAcknowledge delivery pressure while guiding the group back to risk and impact.",
+    role: "Product Owner",
+    name: "James Carter",
+    shortName: "James",
+  },
+  projectManager: {
+    role: "Project Manager",
+    name: "Emily Wong",
+    shortName: "Emily",
   },
   techLead: {
-    speaker: "Tech Lead",
-    dialogue:
-      "From a technology perspective, releasing now could create avoidable risk.\n\nIf the defects behave differently in production, we may affect existing users and create follow-up incidents.",
-    options: [
-      {
-        label: "Reduce Risk Before Release",
-        preview: "Prioritises technical certainty over release timing.",
-        text: "We should delay until the risks are reduced.",
-        feedback: "You reduce technical exposure, though business impact becomes heavier.",
-        copilotAfter: "You backed the technical risk view, but timing pressure will rise.",
-        impacts: { trust: 3, risk: -10, business: -7 },
-        reactions: {
-          techLead: { text: "Feels backed", tone: "positive" },
-          productOwner: { text: "Worried about missed timing", tone: "negative" },
-        },
-      },
-      {
-        label: "Explore Release Controls",
-        preview: "Looks for mitigation while keeping the release alive.",
-        text: "Can we put controls in place and proceed carefully?",
-        feedback: "Mitigation is considered, but unresolved uncertainty stays in play.",
-        copilotAfter: "You kept a controlled-release path open, but detail will matter now.",
-        impacts: { trust: 3, risk: 2, business: 5 },
-        reactions: {
-          techLead: { text: "Wants more detail on controls", tone: "neutral" },
-          productOwner: { text: "Sees a path forward", tone: "positive" },
-        },
-      },
-      {
-        label: "Ask for Worst Case",
-        preview: "Surfaces the real downside before a recommendation is made.",
-        text: "What is the worst-case impact if we release as planned?",
-        feedback: "You draw out technical risk clearly before pushing toward a decision.",
-        copilotAfter: "This strengthens decision confidence by forcing the risk into the open.",
-        impacts: { trust: 8, risk: -8, business: 4 },
-        reactions: {
-          techLead: { text: "Supports the deeper analysis", tone: "positive" },
-          tester: { text: "Risk is being surfaced", tone: "positive" },
-          productOwner: { text: "Waiting for recommendation", tone: "neutral" },
-        },
-      },
-    ],
-    noteLines: [
-      "Tech Lead raised production risk and potential downstream incidents.",
-      "Draft action: assess mitigation options and release controls.",
-    ],
-    aiSuggestion:
-      "Suggested approach:\nAsk for worst-case impact and possible mitigation before making a final recommendation.",
+    role: "Tech Lead",
+    name: "Daniel Novak",
+    shortName: "Daniel",
   },
 };
 
-const finalDecision = {
-  title: "Project Manager",
-  prompt:
-    "We need to leave this meeting with a clear direction.\n\nBased on everything discussed, what is your recommendation?",
-  helper:
-    "Your recommendation will affect stakeholder trust, system risk, and business impact.",
-  options: [
-    {
-      label: "Proceed as Planned",
-      preview: "Protects delivery timing, but leaves the room carrying more risk.",
-      text: "Proceed with release as planned",
-      value: "Proceed with release as planned",
-      copilotAfter: "This keeps momentum, but the room may question unresolved customer risk.",
-      impacts: { trust: -6, risk: 12, business: 10 },
-    },
-    {
-      label: "Delay Release",
-      preview: "Reduces risk exposure, but raises delivery consequences.",
-      text: "Delay the release",
-      value: "Delay the release",
-      copilotAfter: "This reduces technical risk, but business impact will be more visible.",
-      impacts: { trust: 2, risk: -14, business: -10 },
-    },
-    {
-      label: "Controlled Release",
-      preview: "Balances progress with mitigation and tighter controls.",
-      text: "Proceed with a partial or controlled release",
-      value: "Partial release",
-      copilotAfter: "This gives the room a balanced path between risk and commitment.",
-      impacts: { trust: 8, risk: -5, business: 6 },
-    },
-  ],
+const meetingReactionCopy = {
+  tester: {
+    concerned: { text: "Concerned about defects", tone: "neutral" },
+    engaged: { text: "Walking through defect risk", tone: "positive" },
+    supported: { text: "Feels customer risk is recognised", tone: "positive" },
+    frustrated: { text: "Feels risk is being minimised", tone: "negative" },
+  },
+  productOwner: {
+    impatient: { text: "Watching delivery pressure", tone: "neutral" },
+    engaged: { text: "Explaining commitment pressure", tone: "positive" },
+    supported: { text: "Feels delivery is recognised", tone: "positive" },
+    defensive: { text: "Defending release commitment", tone: "negative" },
+  },
+  techLead: {
+    analytical: { text: "Evaluating technical impact", tone: "neutral" },
+    engaged: { text: "Clarifying feasibility", tone: "positive" },
+    withdrawn: { text: "Needs more precise framing", tone: "negative" },
+  },
+  projectManager: {
+    neutral: { text: "Holding the room together", tone: "neutral" },
+    aligned: { text: "Alignment is improving", tone: "positive" },
+    active: { text: "Stepping in to steady the room", tone: "negative" },
+  },
 };
 
 const assistantKickoff = [
-  "State purpose",
-  "Confirm who is represented in the room",
-  "Define the problem",
-  "Set the expected outcome",
+  "Your opening will shape the tone of the discussion.",
+  "Keep customer risk, delivery pressure, and decision structure visible.",
+  "Guide the room toward a recommendation instead of a circular debate.",
 ];
 
-const kickoffStageMeta = {
-  opening: {
-    tag: "Opening Move",
-    subtitle: "Choose how you want the room to hear you first.",
-    status: "Awaiting your opening",
-    cue: "All stakeholders have joined. The room is waiting for your opening.",
-    nudge: [
-      "You may want to clarify the purpose first.",
-      "A structured opening will help the room settle quickly.",
+const openingChoices = [
+  {
+    id: "structured",
+    label: "Structured Opening",
+    headline:
+      "Let's align first on release readiness, key risks, and the decision we need to make today.",
+    preview: "Best for calm structure, trust, and lower tension.",
+    text:
+      "Let's align first on release readiness, key risks, and the decision we need to make today.",
+    feedback: "The room settles quickly because your opening gives everyone a shared structure.",
+    assistant: [
+      "This opening gives the room a clear structure.",
+      "Choose deliberately which pressure you want to surface next.",
+    ],
+    delta: {
+      facilitationScore: 2,
+      stakeholderTrust: 1,
+      riskFocus: 1,
+      tension: -1,
+      pmMood: "aligned",
+    },
+    reactions: [
+      { speaker: "Emily", text: "That gives us a good structure.", variant: "stakeholder" },
+      {
+        speaker: "Sarah",
+        text: "Thanks. I'd like to start with the defect risk.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "James",
+        text: "Fine, but we also need to stay grounded in delivery impact.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Daniel",
+        text: "That works. Let's be clear on what is actually at risk.",
+        variant: "stakeholder",
+      },
+    ],
+    notes: [
+      "Opening created a clear structure for the room.",
+      "Release readiness, risk, and the decision were named early.",
     ],
   },
-  problem: {
-    tag: "Problem Framing",
-    subtitle: "Define the issue clearly before the room starts debating solutions.",
-    status: "Problem being framed",
-    cue: "The room is listening for how you define the problem.",
-    nudge: [
-      "Anchor the room in evidence, not just pressure.",
-      "Make the release risk explicit before the debate widens.",
+  {
+    id: "quick",
+    label: "Quick Check-in",
+    headline: "Quick check-in from everyone — how are we looking for release?",
+    preview: "Faster and lighter, but the room still needs firmer control.",
+    text: "Quick check-in from everyone — how are we looking for release?",
+    feedback: "The room answers, but it is still looking to you for stronger facilitation.",
+    assistant: [
+      "This keeps momentum, but the room may drift without more structure.",
+      "Use your next move to take control of the discussion.",
+    ],
+    delta: {
+      deliveryFocus: 1,
+    },
+    reactions: [
+      {
+        speaker: "Emily",
+        text: "We may need more structure if views differ.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Sarah",
+        text: "From my side, there are still some serious defects.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "James",
+        text: "We're close, and we need to keep momentum.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Daniel",
+        text: "It depends how we define readiness.",
+        variant: "stakeholder",
+      },
+    ],
+    notes: [
+      "Opening kept the room moving, but structure remained light.",
+      "Delivery momentum was acknowledged early.",
     ],
   },
-  outcome: {
-    tag: "Outcome Framing",
-    subtitle: "Set the decision standard so the discussion has a destination.",
-    status: "Decision frame forming",
-    cue: "Stakeholders need to know what this meeting must achieve.",
-    nudge: [
-      "A clear end-state will make the rest of the discussion easier to control.",
-      "Signal how the room will know when it has enough to decide.",
+  {
+    id: "direct",
+    label: "Direct Challenge",
+    headline: "Why are we still considering release when there are unresolved issues?",
+    preview: "Raises pressure quickly and can reduce trust if not recovered.",
+    text: "Why are we still considering release when there are unresolved issues?",
+    feedback: "The room feels the pressure immediately, and Emily steps in to keep it constructive.",
+    assistant: [
+      "The risk concern is visible now, but the room needs a more balanced tone.",
+      "Recover with structure or use a precise technical question to regain trust.",
+    ],
+    delta: {
+      facilitationScore: -1,
+      stakeholderTrust: -1,
+      riskFocus: 2,
+      tension: 1,
+      testerMood: "supported",
+      poMood: "defensive",
+      pmMood: "active",
+    },
+    reactions: [
+      { speaker: "Emily", text: "Let's keep this constructive.", variant: "stakeholder" },
+      {
+        speaker: "Sarah",
+        text: "I agree the risks need attention.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "James",
+        text: "That's not a balanced way to frame this.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Daniel",
+        text: "We should avoid jumping to conclusions before reviewing impact.",
+        variant: "stakeholder",
+      },
+    ],
+    notes: [
+      "Opening sharply raised concern about unresolved issues.",
+      "Room tension increased and the framing felt less balanced.",
+    ],
+  },
+];
+
+const challengeRecoveryChoices = [
+  {
+    id: "reframe",
+    label: "Reframe More Neutrally",
+    headline: "Reset the tone without losing sight of the risk.",
+    preview: "Best for restoring balance and trust after the challenge.",
+    text:
+      "Let me reframe that. We need to review the impact clearly before we decide the release path.",
+    feedback: "The room responds better once you reset the tone and bring the discussion back to impact.",
+    assistant: [
+      "That helps steady the room.",
+      "Now choose the pressure you want to surface first.",
+    ],
+    delta: {
+      facilitationScore: 1,
+      stakeholderTrust: 1,
+      tension: -1,
+      poMood: "impatient",
+      pmMood: "neutral",
+    },
+    reactions: [
+      { speaker: "Emily", text: "That's a better way to frame it.", variant: "stakeholder" },
+      { speaker: "James", text: "Fine. Let's stay balanced then.", variant: "stakeholder" },
+      {
+        speaker: "Daniel",
+        text: "Good. Then let's be precise about the impact.",
+        variant: "stakeholder",
+      },
+    ],
+    notes: ["Direct challenge was reframed into a more balanced discussion."],
+    next: "followupChoice",
+  },
+  {
+    id: "double_down",
+    label: "Double Down on Risk",
+    headline: "Keep pressing on customer risk even if the room stiffens.",
+    preview: "Strengthens the risk lens, but raises tension further.",
+    text:
+      "The customer risk is still the main concern here, so let's stay with that for a moment.",
+    feedback: "The risk stance is clear, but James becomes more defensive and Emily wants the room grounded again.",
+    assistant: [
+      "You kept the risk lens front and center.",
+      "Bring in evidence quickly or the room may split harder.",
+    ],
+    delta: {
+      riskFocus: 1,
+      stakeholderTrust: -1,
+      tension: 1,
+      testerMood: "supported",
+      poMood: "defensive",
+      pmMood: "active",
+    },
+    reactions: [
+      {
+        speaker: "Sarah",
+        text: "I'm glad we're not moving past that too quickly.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "James",
+        text: "We're still talking as if delay is already decided.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Emily",
+        text: "Let's make sure this still comes back to a decision.",
+        variant: "stakeholder",
+      },
+    ],
+    notes: ["Risk remained the dominant frame, increasing pressure in the room."],
+    next: "testerFollowup",
+  },
+  {
+    id: "invite_tech",
+    label: "Invite Tech Lead to Provide Context",
+    headline: "Use Daniel's technical view to regain precision.",
+    preview: "Best for calming the room with feasibility detail.",
+    text: "Daniel, give us the technical context before we take a position.",
+    feedback: "The room becomes more analytical once Daniel is invited in with a precise question.",
+    assistant: [
+      "This redirects the room toward facts and feasibility.",
+      "Use Daniel's answer to decide whether to widen the trade-off discussion.",
+    ],
+    delta: {
+      facilitationScore: 1,
+      stakeholderTrust: 1,
+      tension: -1,
+      techLeadMood: "engaged",
+      pmMood: "neutral",
+    },
+    reactions: [
+      {
+        speaker: "Daniel",
+        text: "Good. Let's talk about the actual impact rather than assumptions.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Emily",
+        text: "That helps bring the conversation back into structure.",
+        variant: "stakeholder",
+      },
+    ],
+    notes: ["Tech context was brought in to stabilise the conversation."],
+    next: "techLeadFollowup",
+  },
+];
+
+const followUpPromptCopy = {
+  structured: {
+    title: "Who do you respond to first?",
+    prompt: "Choose which pressure you want the room to examine first.",
+  },
+  quick: {
+    title: "How do you take control of the discussion?",
+    prompt: "The room has spoken. Now decide how you will structure the next part.",
+  },
+  recovered: {
+    title: "How do you steady the room now?",
+    prompt: "You have reset the tone. Choose the pressure you want to surface next.",
+  },
+};
+
+const followUpBranches = {
+  tester: {
+    speakerKey: "tester",
+    stageTag: "Tester Concern",
+    title: "Sarah is detailing the defect risk.",
+    subtitle: "Customer impact is now the clearest signal in the room.",
+    status: "Risk signal under review",
+    titleForFeed: "Tester concern",
+    hostText:
+      "Sarah, can you walk us through the defect severity and what may impact customers?",
+    delta: {
+      testerMood: "engaged",
+      riskFocus: 2,
+      stakeholderTrust: 1,
+      facilitationScore: 1,
+    },
+    reactions: [
+      {
+        speaker: "Sarah",
+        text:
+          "There are three high severity defects. Two could affect existing customers if we release without further action.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "James",
+        text: "Are we sure they're severe enough to justify delay?",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Daniel",
+        text: "We should separate confirmed impact from possible impact.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Emily",
+        text: "Let's capture the customer-facing risk clearly.",
+        variant: "stakeholder",
+      },
+    ],
+    assistant: [
+      "You've surfaced the strongest risk signal in the room.",
+      "Now validate the technical impact, explore the delivery consequence, or summarise the trade-off.",
+    ],
+    notes: [
+      "Sarah detailed three high severity defects.",
+      "Two defects may affect existing customers.",
+    ],
+    options: [
+      {
+        id: "tester_to_tech",
+        label: "Ask Daniel to Validate Technical Impact",
+        headline: "Pressure-test the production risk before the room decides.",
+        preview: "Tightens the evidence behind the risk case.",
+        text:
+          "Daniel, can you validate the technical impact and what the worst-case production behaviour might be?",
+        delta: {
+          techLeadMood: "engaged",
+          riskFocus: 1,
+          facilitationScore: 1,
+        },
+        reactions: [
+          {
+            speaker: "Daniel",
+            text:
+              "Yes. Two of these defects could alter production behaviour, but we need to stay precise about the worst-case impact.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "Emily",
+            text: "That gives us a firmer technical footing for the decision.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["Daniel was asked to validate the production impact of the defects."],
+        assistant: [
+          "Good move. The room now has a stronger technical basis for the risk discussion.",
+          "Use that clarity to frame the overall trade-off next.",
+        ],
+      },
+      {
+        id: "tester_to_po",
+        label: "Ask James to Explain Delivery Consequences",
+        headline: "Bring the cost of delay into view before the room hardens.",
+        preview: "Balances the risk discussion with delivery pressure.",
+        text:
+          "James, what would a delay mean for the release commitment and stakeholder confidence?",
+        delta: {
+          poMood: "engaged",
+          deliveryFocus: 1,
+          facilitationScore: 1,
+        },
+        reactions: [
+          {
+            speaker: "James",
+            text:
+              "A delay would create immediate pressure with stakeholders and raise questions about delivery confidence.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "Emily",
+            text: "That helps keep the business consequence visible too.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["Delivery consequence of delay was brought into the discussion."],
+        assistant: [
+          "Now the room can see both the customer risk and the delivery consequence.",
+          "This is a good setup for explicit trade-off framing.",
+        ],
+      },
+      {
+        id: "tester_to_tradeoff",
+        label: "Summarise the Risk and Move Toward Trade-off Discussion",
+        headline: "Show the room you are integrating what you heard.",
+        preview: "Builds trust by moving from detail into decision framing.",
+        text:
+          "So far, we have credible customer risk on the table. Let's move toward the trade-off explicitly.",
+        delta: {
+          facilitationScore: 1,
+          stakeholderTrust: 1,
+        },
+        reactions: [
+          {
+            speaker: "Emily",
+            text: "That summary helps. We can work from that.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "Daniel",
+            text: "Agreed. We should keep the trade-off specific.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["Risk was summarised and linked to the coming trade-off discussion."],
+        assistant: [
+          "You're moving the room from evidence into facilitation.",
+          "Make the trade-off explicit next.",
+        ],
+      },
+    ],
+  },
+  techLead: {
+    speakerKey: "techLead",
+    stageTag: "Technical View",
+    title: "Daniel is outlining the technical impact.",
+    subtitle: "The room is now focusing on technical feasibility and worst-case behaviour.",
+    status: "Technical impact under review",
+    titleForFeed: "Tech Lead view",
+    hostText: "Daniel, from a technical perspective, how significant is the release risk?",
+    delta: {
+      techLeadMood: "engaged",
+      riskFocus: 1,
+      facilitationScore: 1,
+      stakeholderTrust: 1,
+    },
+    reactions: [
+      {
+        speaker: "Daniel",
+        text:
+          "Two of the defects could affect production behaviour, but we need to be precise about worst-case impact.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Sarah",
+        text: "That still points to material customer risk.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "James",
+        text: "If there's uncertainty, we shouldn't overreact either.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Emily",
+        text: "Let's keep both risk and delivery impact visible.",
+        variant: "stakeholder",
+      },
+    ],
+    assistant: [
+      "Daniel has put the risk on a more precise footing.",
+      "Now decide whether you want more customer detail, more delivery consequence, or direct trade-off framing.",
+    ],
+    notes: [
+      "Daniel clarified that two defects could affect production behaviour.",
+      "The room still needs precision about worst-case impact.",
+    ],
+    options: [
+      {
+        id: "tech_to_tester",
+        label: "Ask Sarah to Clarify Customer Risk",
+        headline: "Bring the customer-facing consequence into sharper focus.",
+        preview: "Best for grounding the technical point in user impact.",
+        text: "Sarah, can you clarify what the customer-facing risk actually looks like?",
+        delta: {
+          testerMood: "engaged",
+          riskFocus: 1,
+          facilitationScore: 1,
+        },
+        reactions: [
+          {
+            speaker: "Sarah",
+            text:
+              "The payment issue is the clearest customer risk. If it appears in production, it affects live outcomes immediately.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "Emily",
+            text: "That makes the customer impact more concrete.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["Customer-facing impact was clarified after the technical view."],
+        assistant: [
+          "Good. The room now has both technical and customer language for the risk.",
+          "Use that to frame the broader decision.",
+        ],
+      },
+      {
+        id: "tech_to_po",
+        label: "Ask James What a Delay Would Mean",
+        headline: "Balance the technical picture with delivery consequence.",
+        preview: "Best for surfacing the business pressure without losing structure.",
+        text: "James, what would a delay mean in practical terms for this release?",
+        delta: {
+          poMood: "engaged",
+          deliveryFocus: 1,
+          facilitationScore: 1,
+        },
+        reactions: [
+          {
+            speaker: "James",
+            text:
+              "It means immediate stakeholder pressure, replanning, and a loss of confidence in the release commitment.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "Emily",
+            text: "That helps keep the delivery consequence explicit.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["Delivery impact of a delay was made explicit after the technical view."],
+        assistant: [
+          "Now both sides of the trade-off are visible.",
+          "Frame the decision so the room can compare them clearly.",
+        ],
+      },
+      {
+        id: "tech_to_balance",
+        label: "Frame a Balanced Trade-off Discussion",
+        headline: "Move the room from technical detail into decision framing.",
+        preview: "Best for facilitation quality and room alignment.",
+        text:
+          "Let's put both the technical risk and the delivery impact on the table together before we decide.",
+        delta: {
+          facilitationScore: 1,
+          stakeholderTrust: 1,
+          riskFocus: 1,
+          deliveryFocus: 1,
+        },
+        reactions: [
+          {
+            speaker: "Emily",
+            text: "That's a useful shift from evidence into decision framing.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "James",
+            text: "As long as delivery impact stays visible, that's fair.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["The discussion moved from technical detail into trade-off framing."],
+        assistant: [
+          "Strong facilitation move.",
+          "Make the trade-off explicit next so the room can align around it.",
+        ],
+      },
+    ],
+  },
+  productOwner: {
+    speakerKey: "productOwner",
+    stageTag: "Delivery Pressure",
+    title: "James is outlining the delivery commitment.",
+    subtitle: "The business consequence of delay is now active in the room.",
+    status: "Delivery pressure under review",
+    titleForFeed: "Product Owner pressure",
+    hostText:
+      "James, can you talk us through the delivery commitment and what happens if we delay?",
+    delta: {
+      poMood: "engaged",
+      deliveryFocus: 2,
+      stakeholderTrust: 1,
+      facilitationScore: 1,
+    },
+    reactions: [
+      {
+        speaker: "James",
+        text:
+          "The release timing has already been communicated. Any delay will create pressure with stakeholders and reduce confidence in delivery.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Sarah",
+        text: "That doesn't remove the customer risk.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Daniel",
+        text: "We still need to understand what releasing now actually means technically.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Emily",
+        text: "We're clearly balancing competing pressures.",
+        variant: "stakeholder",
+      },
+    ],
+    assistant: [
+      "The delivery pressure is now explicit.",
+      "Bring risk back in, test feasibility, or summarise the trade-off before the room polarises.",
+    ],
+    notes: [
+      "James confirmed the release commitment has already been communicated.",
+      "Delay would reduce confidence in delivery.",
+    ],
+    options: [
+      {
+        id: "po_to_risk",
+        label: "Bring Risk Back into the Discussion",
+        headline: "Rebalance the room before delivery pressure takes over.",
+        preview: "Best for showing that business pressure does not erase customer risk.",
+        text:
+          "We also need to bring the customer risk back into focus before we decide anything.",
+        delta: {
+          testerMood: "supported",
+          riskFocus: 1,
+          facilitationScore: 1,
+        },
+        reactions: [
+          {
+            speaker: "Sarah",
+            text: "Yes. That's the part I'm most concerned about.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "Emily",
+            text: "Good. That keeps both sides visible.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["Customer risk was brought back in after delivery pressure surfaced."],
+        assistant: [
+          "You prevented the discussion from becoming one-sided.",
+          "Now frame the trade-off clearly for the room.",
+        ],
+      },
+      {
+        id: "po_to_tech",
+        label: "Ask Daniel for Feasibility View",
+        headline: "Use technical precision to test what release now would really mean.",
+        preview: "Best for grounding the delivery pressure in feasibility.",
+        text: "Daniel, from a feasibility perspective, what would releasing now actually mean?",
+        delta: {
+          techLeadMood: "engaged",
+          riskFocus: 1,
+          facilitationScore: 1,
+        },
+        reactions: [
+          {
+            speaker: "Daniel",
+            text:
+              "It means accepting real uncertainty around production behaviour. That's workable only if we tighten the scope or controls.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "Emily",
+            text: "That gives us a more grounded view of the feasible options.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["Daniel was asked to test the feasibility of releasing under pressure."],
+        assistant: [
+          "Good. The room now has a more defensible technical basis.",
+          "Use that to frame the trade-off explicitly.",
+        ],
+      },
+      {
+        id: "po_to_tradeoff",
+        label: "Summarise the Delivery Trade-off",
+        headline: "Show the room you are integrating delivery pressure into the decision frame.",
+        preview: "Best for staying balanced without reacting too quickly.",
+        text:
+          "So the delivery pressure is real. Let's make sure we frame the trade-off clearly before we decide.",
+        delta: {
+          deliveryFocus: 1,
+          facilitationScore: 1,
+          stakeholderTrust: 1,
+        },
+        reactions: [
+          {
+            speaker: "Emily",
+            text: "That's the right move. We need the trade-off clearly on the table.",
+            variant: "stakeholder",
+          },
+          {
+            speaker: "James",
+            text: "Agreed, as long as the delivery impact stays visible.",
+            variant: "stakeholder",
+          },
+        ],
+        notes: ["Delivery pressure was summarised and linked to decision framing."],
+        assistant: [
+          "You're keeping the room out of a binary argument.",
+          "Frame the trade-off clearly next.",
+        ],
+      },
     ],
   },
 };
@@ -535,18 +904,79 @@ function clampScore(value) {
   return Math.max(0, Math.min(100, value));
 }
 
-function applyImpacts(impacts) {
-  state.scores.trust = clampScore(state.scores.trust + impacts.trust);
-  state.scores.risk = clampScore(state.scores.risk + impacts.risk);
-  state.scores.business = clampScore(state.scores.business + impacts.business);
+function clampGauge(value, min = -8, max = 12) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function getTensionText() {
+  return {
+    1: "Low",
+    2: "Medium",
+    3: "High",
+  }[state.tension] || "Medium";
+}
+
+function applyMeetingDelta(delta = {}) {
+  state.tension = Math.max(1, Math.min(3, state.tension + (delta.tension || 0)));
+  state.stakeholderTrust = clampGauge(
+    state.stakeholderTrust + (delta.stakeholderTrust || 0),
+    -6,
+    12
+  );
+  state.riskFocus = clampGauge(state.riskFocus + (delta.riskFocus || 0), 0, 12);
+  state.deliveryFocus = clampGauge(state.deliveryFocus + (delta.deliveryFocus || 0), 0, 12);
+  state.facilitationScore = clampGauge(
+    state.facilitationScore + (delta.facilitationScore || 0),
+    -4,
+    12
+  );
+
+  if (delta.testerMood) {
+    state.testerMood = delta.testerMood;
+  }
+
+  if (delta.poMood) {
+    state.poMood = delta.poMood;
+  }
+
+  if (delta.techLeadMood) {
+    state.techLeadMood = delta.techLeadMood;
+  }
+
+  if (delta.pmMood) {
+    state.pmMood = delta.pmMood;
+  }
+
   updateTension();
 }
 
 function updateTension() {
-  const average = (state.scores.trust + (100 - state.scores.risk) + state.scores.business) / 3;
-  const tension = average >= 62 ? "Low" : average >= 44 ? "Medium" : "High";
+  const tension = getTensionText();
   tensionLabel.textContent = tension;
   tensionPill.dataset.level = tension.toLowerCase();
+}
+
+function buildRoomReactions(overrides = {}) {
+  const baseReactions = {
+    tester:
+      meetingReactionCopy.tester[state.testerMood] || meetingReactionCopy.tester.concerned,
+    techLead:
+      meetingReactionCopy.techLead[state.techLeadMood] || meetingReactionCopy.techLead.analytical,
+    productOwner:
+      meetingReactionCopy.productOwner[state.poMood] || meetingReactionCopy.productOwner.impatient,
+    projectManager:
+      meetingReactionCopy.projectManager[state.pmMood] ||
+      meetingReactionCopy.projectManager.neutral,
+  };
+
+  return {
+    ...baseReactions,
+    ...overrides,
+  };
+}
+
+function syncRoomReactions(overrides = {}) {
+  setStakeholderReactions(buildRoomReactions(overrides));
 }
 
 function setStakeholderReactions(reactions) {
@@ -568,6 +998,10 @@ function highlightSpeaker(stakeholderKey) {
   Object.entries(stakeholderCards).forEach(([key, card]) => {
     card.classList.toggle("is-speaking", key === stakeholderKey);
   });
+}
+
+function getPlayerName() {
+  return state.playerName.trim() || "You";
 }
 
 function clearHesitationNudge() {
@@ -600,6 +1034,10 @@ function addConversationEntry(entry) {
   }
 
   state.conversationLog.push(entry);
+}
+
+function addConversationEntries(entries) {
+  entries.forEach((entry) => addConversationEntry(entry));
 }
 
 function renderConversation(title, entries = state.conversationLog.slice(-4)) {
@@ -921,9 +1359,14 @@ function renderNotes() {
 }
 
 function renderAssistant(title, contentLines) {
+  const lines = Array.isArray(contentLines) ? contentLines : [];
+  state.lastAssistContext = {
+    title,
+    lines,
+  };
   assistantHeading.textContent = title;
   assistantContent.innerHTML = "";
-  contentLines.forEach((line) => {
+  lines.forEach((line) => {
     const li = document.createElement("li");
     li.textContent = line;
     assistantContent.appendChild(li);
@@ -954,77 +1397,6 @@ function buildOptionButton(option, handler) {
   return button;
 }
 
-function getKickoffNotes(stepId) {
-  const noteMap = {
-    opening: ["Meeting started.", "Purpose being defined.", "Stakeholders aligned: partial."],
-    problem: ["Problem framing being clarified."],
-    outcome: ["Decision path being defined."],
-  };
-
-  return noteMap[stepId] || [];
-}
-
-function renderKickoffStep() {
-  const step = kickoffSequence[state.currentRound];
-  const meta = kickoffStageMeta[step.id];
-  const playerName = state.playerName.trim() || "You";
-
-  highlightSpeaker("host");
-  setMeetingStage({
-    tag: meta.tag,
-    title: step.id === "opening" ? "Everyone is looking at you to begin." : step.title,
-    subtitle: meta.subtitle,
-    status: meta.status,
-  });
-
-  addConversationEntry({ id: `cue-${step.id}`, ...buildConversationCue(meta.cue) });
-  renderConversation("Room feed");
-  renderAssistant("AI Copilot", step.id === "opening" ? assistantKickoff : meta.nudge);
-  scheduleCopilotNudge(meta.nudge);
-
-  const options = document.createElement("div");
-  options.className = "option-list";
-
-  step.options.forEach((option) => {
-    options.appendChild(
-      buildOptionButton(option, (selectedOption) => {
-        clearHesitationNudge();
-        state.selections[step.id] = selectedOption.text;
-        addConversationEntry({
-          id: `host-${step.id}`,
-          speaker: playerName,
-          text: selectedOption.text,
-          variant: "host",
-        });
-        addNotes(getKickoffNotes(step.id));
-        applyImpacts(selectedOption.impacts);
-        setStakeholderReactions(selectedOption.reactions);
-        renderConversation("Room feed");
-        renderAssistant("AI Copilot", [
-          selectedOption.copilotAfter || "This choice changes how the room reads your intent.",
-          `Tension now: ${tensionLabel.textContent}.`,
-        ]);
-        renderFeedback(selectedOption.feedback, () => {
-          state.currentRound += 1;
-          if (state.currentRound < kickoffSequence.length) {
-            renderKickoffStep();
-          } else {
-            state.stage = "speakerSelection";
-            renderSpeakerSelection();
-          }
-        });
-      })
-    );
-  });
-
-  renderResponseShell({
-    eyebrow: "Your response options",
-    title: step.title,
-    prompt: step.prompt,
-    options,
-  });
-}
-
 function renderFeedback(message, callback) {
   const feedback = document.createElement("div");
   feedback.className = "response-feedback";
@@ -1039,27 +1411,311 @@ function renderFeedback(message, callback) {
   decisionPanel.append(feedback, continueButton);
 }
 
-function renderSpeakerSelection() {
-  highlightSpeaker("host");
+function renderOpeningMove() {
+  state.stage = "opening";
+  highlightSpeaker("");
   setMeetingStage({
-    tag: "Speaker Selection",
-    title: "Choose who should speak first.",
-    subtitle: "Guide the discussion by surfacing the signal you want the room to examine next.",
-    status: "Selecting first voice",
+    tag: "Opening Move",
+    title: "Everyone is looking at you to begin.",
+    subtitle: "Your opening will shape the tone of the room.",
+    status: "Awaiting your opening",
   });
 
-  addConversationEntry({
-    id: "cue-speaker-selection",
-    ...buildConversationCue("The room is ready. Choose the first stakeholder to hear from."),
+  renderConversation("Opening beat");
+  renderAssistant("AI Copilot", assistantKickoff);
+  scheduleCopilotNudge([
+    "You may want to clarify the purpose first.",
+    "A structured opening will help the room settle quickly.",
+  ]);
+
+  const options = document.createElement("div");
+  options.className = "option-list";
+
+  openingChoices.forEach((choice) => {
+    options.appendChild(
+      buildOptionButton(choice, () => {
+        clearHesitationNudge();
+        state.selections.opening = choice.label;
+        state.meetingContext.opening = choice.id;
+        applyMeetingDelta(choice.delta);
+        syncRoomReactions();
+        addConversationEntries([
+          {
+            speaker: getPlayerName(),
+            text: choice.text,
+            variant: "host",
+          },
+          ...choice.reactions,
+        ]);
+        addNotes(choice.notes);
+        renderConversation("Opening responses");
+        renderAssistant("AI Copilot", [
+          ...choice.assistant,
+          `Tension now: ${getTensionText()}.`,
+        ]);
+        renderFeedback(choice.feedback, () => {
+          if (choice.id === "direct") {
+            renderChallengeRecovery();
+            return;
+          }
+
+          renderFollowUpChoice(choice.id === "quick" ? "quick" : "structured");
+        });
+      })
+    );
   });
-  renderConversation("Room feed");
+
+  renderResponseShell({
+    eyebrow: "How do you open the meeting?",
+    title: "Choose how you want the room to hear you first.",
+    prompt:
+      "This move will influence trust, tension, and how quickly the room aligns around the real issue.",
+    options,
+  });
+}
+
+function renderChallengeRecovery() {
+  state.stage = "challengeRecovery";
+  highlightSpeaker("projectManager");
+  setMeetingStage({
+    tag: "Tone Recovery",
+    title: "The room needs a steadier frame.",
+    subtitle: "Recover the tone or channel the pressure into a more precise line of discussion.",
+    status: "Tension rising",
+  });
+
+  renderConversation("Recovery moment");
   renderAssistant("AI Copilot", [
-    "Select the first voice based on the risk you want to surface first.",
-    "You will align on the final decision with the Project Manager later in the meeting.",
+    "The room felt the challenge sharply.",
+    "Recover with balance or pivot into a precise question to regain control.",
   ]);
   scheduleCopilotNudge([
-    "Starting with the strongest risk signal can help the room focus quickly.",
-    "You can always bring the Project Manager in for final alignment later.",
+    "A calmer reframe can rebuild trust quickly.",
+    "If you keep pressing, be ready to back it with evidence.",
+  ]);
+
+  const options = document.createElement("div");
+  options.className = "option-list";
+
+  challengeRecoveryChoices.forEach((choice) => {
+    options.appendChild(
+      buildOptionButton(choice, () => {
+        clearHesitationNudge();
+        state.selections.recovery = choice.label;
+        state.meetingContext.recovery = choice.id;
+        applyMeetingDelta(choice.delta);
+        syncRoomReactions();
+        addConversationEntries([
+          {
+            speaker: getPlayerName(),
+            text: choice.text,
+            variant: "host",
+          },
+          ...choice.reactions,
+        ]);
+        addNotes(choice.notes);
+        renderConversation("Recovery responses");
+        renderAssistant("AI Copilot", [
+          ...choice.assistant,
+          `Tension now: ${getTensionText()}.`,
+        ]);
+        renderFeedback(choice.feedback, () => {
+          if (choice.next === "followupChoice") {
+            renderFollowUpChoice("recovered");
+            return;
+          }
+
+          if (choice.next === "testerFollowup") {
+            renderFollowUpNode("tester");
+            return;
+          }
+
+          renderFollowUpNode("techLead");
+        });
+      })
+    );
+  });
+
+  renderResponseShell({
+    eyebrow: "How do you recover or continue?",
+    title: "Decide how you want to handle the tension you just created.",
+    prompt:
+      "This is your chance to either rebalance the room or lean harder into one side of the conflict.",
+    options,
+  });
+}
+
+function renderFollowUpChoice(mode = "structured") {
+  state.stage = "followupChoice";
+  const copy = followUpPromptCopy[mode] || followUpPromptCopy.structured;
+
+  highlightSpeaker("");
+  setMeetingStage({
+    tag: "First Follow-up",
+    title: copy.title,
+    subtitle: "The first voice you amplify will shape what the room treats as the main pressure.",
+    status: "Discussion opening up",
+  });
+
+  renderConversation("Choosing the next signal");
+  renderAssistant("AI Copilot", [
+    mode === "quick"
+      ? "The room still needs stronger structure from you."
+      : "Choose the next signal you want the room to examine closely.",
+    "This move will influence whether the discussion leans toward risk, delivery, or balance.",
+  ]);
+  scheduleCopilotNudge([
+    "Starting with the right signal helps you control the meeting instead of chasing it.",
+    "Think about which pressure the room needs to understand first.",
+  ]);
+
+  const choiceLabels =
+    mode === "quick"
+      ? {
+          tester: "Ask Tester to Explain the Defects",
+          techLead: "Ask Tech Lead to Define Readiness",
+          productOwner: "Ask PO to Explain Delivery Impact",
+        }
+      : {
+          tester: "Address Tester Concern",
+          techLead: "Ask Tech Lead for Impact View",
+          productOwner: "Acknowledge Product Owner Pressure",
+        };
+
+  const options = document.createElement("div");
+  options.className = "option-list";
+
+  [
+    {
+      key: "tester",
+      label: choiceLabels.tester,
+      headline: "Surface the customer and defect risk first.",
+      preview: "Best for bringing the strongest risk signal into the room immediately.",
+    },
+    {
+      key: "techLead",
+      label: choiceLabels.techLead,
+      headline: "Bring technical feasibility into the centre of the discussion.",
+      preview: "Best for grounding the room in actual production impact.",
+    },
+    {
+      key: "productOwner",
+      label: choiceLabels.productOwner,
+      headline: "Bring delivery pressure and commitment into the conversation.",
+      preview: "Best for exposing the business consequence of delay early.",
+    },
+  ].forEach((choice) => {
+    options.appendChild(
+      buildOptionButton(choice, () => {
+        clearHesitationNudge();
+        state.selections.followUp = choice.label;
+        state.meetingContext.followUp = choice.key;
+        renderFollowUpNode(choice.key);
+      })
+    );
+  });
+
+  renderResponseShell({
+    eyebrow: "Who do you go to next?",
+    title: copy.title,
+    prompt: copy.prompt,
+    helper: "Project Manager alignment will come later once the room has enough context.",
+    options,
+  });
+}
+
+function renderFollowUpNode(branchKey) {
+  state.stage = "followup";
+  const branch = followUpBranches[branchKey];
+
+  if (!branch) {
+    return;
+  }
+
+  highlightSpeaker(branch.speakerKey);
+  setMeetingStage({
+    tag: branch.stageTag,
+    title: branch.title,
+    subtitle: branch.subtitle,
+    status: branch.status,
+  });
+
+  applyMeetingDelta(branch.delta);
+  syncRoomReactions();
+  addConversationEntries([
+    {
+      speaker: getPlayerName(),
+      text: branch.hostText,
+      variant: "host",
+    },
+    ...branch.reactions,
+  ]);
+  addNotes(branch.notes);
+  renderConversation(branch.titleForFeed);
+  renderAssistant("AI Copilot", branch.assistant);
+  scheduleCopilotNudge(branch.assistant);
+
+  const options = document.createElement("div");
+  options.className = "option-list";
+
+  branch.options.forEach((option) => {
+    options.appendChild(
+      buildOptionButton(option, () => {
+        clearHesitationNudge();
+        state.meetingContext.bridge = option.id;
+        applyMeetingDelta(option.delta);
+        syncRoomReactions();
+        addConversationEntries([
+          {
+            speaker: getPlayerName(),
+            text: option.text,
+            variant: "host",
+          },
+          ...option.reactions,
+        ]);
+        addNotes(option.notes);
+        renderConversation(branch.titleForFeed);
+        renderAssistant("AI Copilot", [
+          ...option.assistant,
+          `Tension now: ${getTensionText()}.`,
+        ]);
+        renderFeedback(
+          "The room now has enough detail to decide how the discussion should be framed.",
+          () => {
+            renderFramingChoice();
+          }
+        );
+      })
+    );
+  });
+
+  renderResponseShell({
+    eyebrow: "What do you do next?",
+    title: "Choose how you guide the room from signal into decision framing.",
+    prompt:
+      "This move decides whether the room stays analytical, becomes more polarised, or starts aligning.",
+    options,
+  });
+}
+
+function renderFramingChoice() {
+  state.stage = "framing";
+  highlightSpeaker("projectManager");
+  setMeetingStage({
+    tag: "Decision Framing",
+    title: "How do you frame the discussion now?",
+    subtitle: "This is where the room either aligns around the trade-off or starts to split.",
+    status: "Trade-off being framed",
+  });
+
+  renderConversation("Framing the room");
+  renderAssistant("AI Copilot", [
+    "This is the facilitation moment that shapes the recommendation path.",
+    "Choose a stance that shows judgement, not just preference.",
+  ]);
+  scheduleCopilotNudge([
+    "A balanced frame often lowers tension and increases trust.",
+    "A one-sided frame may strengthen one stakeholder while weakening another.",
   ]);
 
   const options = document.createElement("div");
@@ -1067,193 +1723,812 @@ function renderSpeakerSelection() {
 
   [
     {
-      label: "Tester First",
-      headline: "Surface customer-impacting defects immediately.",
-      preview: "Best for grounding the room in risk early.",
-      value: "tester",
+      id: "risk",
+      label: "Focus on Risk",
+      headline:
+        "Before anything else, we need to understand whether customers could be impacted.",
+      preview: "Strengthens the risk lens, but can increase tension with delivery stakeholders.",
     },
     {
-      label: "Tech Lead First",
-      headline: "Bring technology feasibility and risk to the front.",
-      preview: "Useful if you want the room to think in mitigation terms.",
-      value: "techLead",
+      id: "delivery",
+      label: "Focus on Delivery Impact",
+      headline:
+        "We need to understand whether a delay creates more harm than the current defect risk.",
+      preview: "Strengthens the commitment lens, but can frustrate risk-focused stakeholders.",
     },
     {
-      label: "Product Owner First",
-      headline: "Bring delivery commitment and business pressure into view.",
-      preview: "Useful if you want to expose the timeline tension early.",
-      value: "productOwner",
+      id: "balance",
+      label: "Balance Both Sides",
+      headline:
+        "Let's make the trade-off explicit: customer risk on one side, delivery commitment on the other.",
+      preview: "Best for facilitation quality, trust, and room alignment.",
     },
-  ].forEach((choice) => {
+  ].forEach((option) => {
     options.appendChild(
-      buildOptionButton(choice, () => {
+      buildOptionButton(option, () => {
         clearHesitationNudge();
-        const playerName = state.playerName.trim() || "You";
-        state.firstSpeaker = choice.value;
-        state.speakerQueue = [
-          choice.value,
-          ...discussionOrder.filter((speaker) => speaker !== choice.value),
-        ];
-        state.currentRound = 0;
-        addConversationEntry({
-          id: `host-speaker-${choice.value}`,
-          speaker: playerName,
-          text: `Let's hear from the ${choice.value === "productOwner" ? "Product Owner" : choice.value === "techLead" ? "Tech Lead" : "Tester"} first.`,
-          variant: "host",
-        });
-        addNotes([
-          `${choice.value === "productOwner" ? "Product Owner" : choice.value === "techLead" ? "Tech Lead" : "Tester"} invited to speak first.`,
+        state.selections.framing = option.label;
+        state.meetingContext.framing = option.id;
+
+        let delta = {};
+        let reactions = [];
+        let notes = [];
+        let assistantLines = [];
+        let feedback = "";
+
+        if (option.id === "risk") {
+          delta = {
+            riskFocus: 2,
+            tension: 1,
+            testerMood: "supported",
+            poMood: state.poMood === "engaged" ? "defensive" : "impatient",
+            pmMood: "active",
+          };
+          reactions = [
+            { speaker: "Sarah", text: "That's the right priority.", variant: "stakeholder" },
+            {
+              speaker: "James",
+              text: "We also need to remember delivery isn't optional.",
+              variant: "stakeholder",
+            },
+            {
+              speaker: "Daniel",
+              text: "That works if we keep the assessment specific.",
+              variant: "stakeholder",
+            },
+            {
+              speaker: "Emily",
+              text: "Let's make sure we don't lose the broader decision context.",
+              variant: "stakeholder",
+            },
+          ];
+          notes = [
+            "Discussion framed around customer impact risk first.",
+            "Delivery concern became more defensive.",
+          ];
+          assistantLines = [
+            "Risk is now the dominant lens in the room.",
+            "Be ready to acknowledge delivery pressure before making your call.",
+          ];
+          feedback =
+            "The room accepts the risk focus, but delivery tension is now more visible.";
+        }
+
+        if (option.id === "delivery") {
+          delta = {
+            deliveryFocus: 2,
+            tension: 1,
+            poMood: "supported",
+            testerMood: "frustrated",
+            pmMood: "active",
+          };
+          reactions = [
+            { speaker: "James", text: "Exactly. We need a proportionate decision.", variant: "stakeholder" },
+            {
+              speaker: "Sarah",
+              text: "I'm concerned we're minimising the defect severity.",
+              variant: "stakeholder",
+            },
+            {
+              speaker: "Daniel",
+              text: "We need evidence either way.",
+              variant: "stakeholder",
+            },
+            {
+              speaker: "Emily",
+              text: "This is where the room could split if we're not careful.",
+              variant: "stakeholder",
+            },
+          ];
+          notes = [
+            "Discussion framed around delivery consequence first.",
+            "Tester confidence dropped as risk felt underweighted.",
+          ];
+          assistantLines = [
+            "Delivery pressure is now the dominant lens.",
+            "Acknowledge risk before you recommend release or the room may resist.",
+          ];
+          feedback =
+            "The delivery lens is clear, but the room now needs stronger risk acknowledgement.";
+        }
+
+        if (option.id === "balance") {
+          delta = {
+            facilitationScore: 2,
+            stakeholderTrust: 2,
+            riskFocus: 1,
+            deliveryFocus: 1,
+            tension: -1,
+            pmMood: "aligned",
+          };
+          reactions = [
+            { speaker: "Emily", text: "That's a helpful way to frame it.", variant: "stakeholder" },
+            {
+              speaker: "Sarah",
+              text: "As long as the customer risk is clear.",
+              variant: "stakeholder",
+            },
+            {
+              speaker: "James",
+              text: "And as long as delivery impact is part of the decision.",
+              variant: "stakeholder",
+            },
+            {
+              speaker: "Daniel",
+              text: "That gives us a better basis for deciding.",
+              variant: "stakeholder",
+            },
+          ];
+          notes = [
+            "Trade-off was framed explicitly between customer risk and delivery commitment.",
+            "Room alignment improved once both sides were made visible.",
+          ];
+          assistantLines = [
+            "This is the strongest facilitation stance in the room.",
+            "The recommendation path is likely to feel more balanced now.",
+          ];
+          feedback =
+            "The room is more aligned because you made the trade-off explicit without taking sides too early.";
+        }
+
+        applyMeetingDelta(delta);
+        syncRoomReactions();
+        addConversationEntries([
+          {
+            speaker: getPlayerName(),
+            text: option.headline,
+            variant: "host",
+          },
+          ...reactions,
         ]);
-        renderConversation("Room feed");
+        addNotes(notes);
+        renderConversation("Framing responses");
         renderAssistant("AI Copilot", [
-          "This choice will shape which tension lands first in the room.",
-          "Listen for the trade-off you want to surface next.",
+          ...assistantLines,
+          `Tension now: ${getTensionText()}.`,
         ]);
-        renderFeedback("The room turns toward the first stakeholder you selected.", () => {
-          state.stage = "discussion";
-          renderDiscussionRound();
+        renderFeedback(feedback, () => {
+          renderPathDecision();
         });
       })
     );
   });
 
   renderResponseShell({
-    eyebrow: "Discussion control",
-    title: "Who would you like to hear from first?",
-    prompt: "Choose intentionally. The first voice will shape the energy of the discussion.",
-    helper: "You will align on the final decision with the Project Manager later in the meeting.",
+    eyebrow: "Facilitation stance",
+    title: "How do you frame the discussion now?",
+    prompt:
+      "Choose the stance that best helps the room think clearly about the release decision.",
     options,
   });
 }
 
-function renderDiscussionRound() {
-  const currentKey = state.speakerQueue[state.currentRound];
-  const config = discussionContent[currentKey];
-  const playerName = state.playerName.trim() || "You";
+function resolveMeetingPath() {
+  if (state.meetingContext.framing === "balance" && state.facilitationScore >= 4) {
+    return "alignment";
+  }
 
-  highlightSpeaker(currentKey);
-  setMeetingStage({
-    tag: `${config.speaker} speaking`,
-    title: `${config.speaker} has the floor.`,
-    subtitle: "Listen, read the room, and respond in a way that keeps the discussion moving.",
-    status: "Discussion active",
-  });
+  if (state.meetingContext.framing === "risk" && state.tension >= 3) {
+    return "riskEscalation";
+  }
 
-  addConversationEntry({
-    id: `speaker-${currentKey}`,
-    speaker: config.speaker,
-    text: config.dialogue,
-    variant: "stakeholder",
-  });
-  renderConversation(`${config.speaker} is speaking`);
-  renderAssistant("AI Copilot", config.aiSuggestion.split("\n").slice(1));
-  scheduleCopilotNudge(config.aiSuggestion.split("\n").slice(1));
-  addNotes(config.noteLines);
+  if (state.meetingContext.framing === "delivery") {
+    return "deliveryPressure";
+  }
 
-  const options = document.createElement("div");
-  options.className = "option-list";
+  if (Math.abs(state.riskFocus - state.deliveryFocus) <= 1 && state.facilitationScore >= 4) {
+    return "alignment";
+  }
 
-  config.options.forEach((option) => {
-    options.appendChild(
-      buildOptionButton(option, (selectedOption) => {
-        clearHesitationNudge();
-        addConversationEntry({
-          id: `host-response-${currentKey}`,
-          speaker: playerName,
-          text: selectedOption.text,
-          variant: "host",
-        });
-        applyImpacts(selectedOption.impacts);
-        setStakeholderReactions(selectedOption.reactions);
-        renderConversation(`${config.speaker} is speaking`);
-        renderAssistant("AI Copilot", [
-          selectedOption.copilotAfter || "This response changes the tone and direction of the room.",
-          `Tension now: ${tensionLabel.textContent}.`,
-        ]);
-        renderFeedback(selectedOption.feedback, () => {
-          state.currentRound += 1;
-          if (state.currentRound < state.speakerQueue.length) {
-            renderDiscussionRound();
-          } else {
-            state.stage = "finalDecision";
-            renderFinalDecision();
-          }
-        });
-      })
-    );
-  });
+  if (state.riskFocus > state.deliveryFocus) {
+    return "riskEscalation";
+  }
 
-  renderResponseShell({
-    eyebrow: "Your response options",
-    title: `How do you respond to ${config.speaker}?`,
-    prompt: "Choose a response that manages the tension and keeps the discussion moving.",
-    options,
-  });
+  return "deliveryPressure";
 }
 
-function renderFinalDecision() {
-  const playerName = state.playerName.trim() || "You";
-
+function renderRecommendationStage({
+  eyebrow = "Your recommendation",
+  title = "What is your recommendation?",
+  prompt = "The room needs a clear direction before the meeting can close.",
+  helper = "Your recommendation will affect stakeholder trust, system risk, and business impact.",
+} = {}) {
+  state.stage = "recommendation";
   highlightSpeaker("projectManager");
   setMeetingStage({
-    tag: "Final Alignment",
-    title: "The room needs your recommendation.",
-    subtitle: "Bring the discussion to a clear direction the team can act on.",
-    status: "Decision point",
+    tag: "Final Recommendation",
+    title,
+    subtitle: "The team now needs a clear call from you.",
+    status: "Recommendation pending",
   });
 
-  addConversationEntry({
-    id: "project-manager-final",
-    speaker: "Project Manager",
-    text: finalDecision.prompt,
-    variant: "stakeholder",
-  });
-  renderConversation("Final alignment");
+  renderConversation("Final recommendation");
   renderAssistant("AI Copilot", [
-    "You are at the critical decision moment.",
-    "Balance stakeholder trust, system risk, and business impact.",
-    "You can still choose any recommendation independently.",
+    "Connect the recommendation to customer impact, delivery consequence, and decision confidence.",
+    "The strongest recommendation is the one the room can defend after the meeting ends.",
   ]);
   scheduleCopilotNudge([
-    "Summarise the trade-off clearly before choosing the path forward.",
-    "The strongest recommendations name both risk and delivery consequence.",
+    "Name the trade-off clearly before landing the call.",
+    "The room will look for confidence, balance, and follow-through.",
   ]);
 
   const options = document.createElement("div");
   options.className = "option-list";
 
-  finalDecision.options.forEach((option) => {
+  [
+    {
+      key: "release",
+      label: "Recommend Full Release",
+      headline: "Proceed with release as planned.",
+      preview: "Highest delivery momentum, highest residual system risk.",
+    },
+    {
+      key: "delay",
+      label: "Recommend Delay",
+      headline: "Delay the release until the risk is reduced.",
+      preview: "Strongest risk reduction, but highest delivery consequence.",
+    },
+    {
+      key: "controlled",
+      label: "Recommend Controlled Release",
+      headline: "Proceed with a controlled release and clear safeguards.",
+      preview: "Most balanced path between delivery pressure and risk control.",
+    },
+  ].forEach((option) => {
     options.appendChild(
-      buildOptionButton(option, (selectedOption) => {
-        clearHesitationNudge();
-        state.selections.recommendation = selectedOption.value;
-        addConversationEntry({
-          id: "host-final-recommendation",
-          speaker: playerName,
-          text: selectedOption.text,
-          variant: "host",
-        });
-        addNotes([`Recommendation shared: ${selectedOption.value}.`]);
-        applyImpacts(selectedOption.impacts);
-        setStakeholderReactions({
-          projectManager: { text: "Decision recorded", tone: "positive" },
-        });
-        renderConversation("Final alignment");
-        renderAssistant("AI Copilot", [
-          selectedOption.copilotAfter || "A recommendation has now been put on the table.",
-          `Final room tension: ${tensionLabel.textContent}.`,
-        ]);
-        renderOutcome();
+      buildOptionButton(option, () => {
+        submitRecommendation(option.key);
       })
     );
   });
 
   renderResponseShell({
-    eyebrow: "Your recommendation",
-    title: "What is your recommendation?",
-    prompt: "The Project Manager needs a clear direction before the room can close.",
-    helper: finalDecision.helper,
+    eyebrow,
+    title,
+    prompt,
+    helper,
     options,
+  });
+}
+
+function renderTechnicalClarificationStage() {
+  state.stage = "technicalClarification";
+  highlightSpeaker("techLead");
+  setMeetingStage({
+    tag: "Technical Clarification",
+    title: "Daniel is tightening the risk picture.",
+    subtitle: "One final technical clarification can make the recommendation more defensible.",
+    status: "Clarifying the final risk picture",
+  });
+
+  applyMeetingDelta({
+    techLeadMood: "engaged",
+    riskFocus: 1,
+    facilitationScore: 1,
+    stakeholderTrust: 1,
+  });
+  syncRoomReactions();
+  addConversationEntries([
+    {
+      speaker: getPlayerName(),
+      text: "Daniel, before we decide, give us the clearest technical read on the downside.",
+      variant: "host",
+    },
+    {
+      speaker: "Daniel",
+      text:
+        "If we release the full scope now, we accept a real chance of customer impact. A narrower controlled release is the safer technical option.",
+      variant: "stakeholder",
+    },
+    {
+      speaker: "Emily",
+      text: "That's clearer. We can make the call from there.",
+      variant: "stakeholder",
+    },
+  ]);
+  addNotes([
+    "Daniel clarified that a narrower controlled release is the safer technical option.",
+    "Final recommendation now has stronger technical grounding.",
+  ]);
+  renderConversation("Technical clarification");
+  renderAssistant("AI Copilot", [
+    "That clarification improves decision confidence.",
+    "A controlled release is now easier for the room to defend.",
+  ]);
+  renderFeedback("The room has a sharper technical basis for the final recommendation.", () => {
+    renderRecommendationStage({
+      title: "What recommendation do you make now?",
+      prompt: "Daniel has clarified the downside. Choose the path forward.",
+    });
+  });
+}
+
+function renderRiskRecentreStage() {
+  state.stage = "riskRecentre";
+  highlightSpeaker("tester");
+  setMeetingStage({
+    tag: "Risk Re-centre",
+    title: "Sarah needs the risk acknowledged before the room closes.",
+    subtitle: "A quick re-centre can restore confidence before the final call.",
+    status: "Re-centering on risk",
+  });
+
+  applyMeetingDelta({
+    testerMood: "supported",
+    riskFocus: 1,
+    facilitationScore: 1,
+    tension: -1,
+    stakeholderTrust: 1,
+    pmMood: "aligned",
+  });
+  syncRoomReactions();
+  addConversationEntries([
+    {
+      speaker: getPlayerName(),
+      text:
+        "Before we close, I want to re-centre us on the customer risk so the decision is fully grounded.",
+      variant: "host",
+    },
+    {
+      speaker: "Sarah",
+      text: "Thank you. That's the part I needed to hear acknowledged.",
+      variant: "stakeholder",
+    },
+    {
+      speaker: "Emily",
+      text: "Good. That gives us a stronger basis for the decision.",
+      variant: "stakeholder",
+    },
+  ]);
+  addNotes([
+    "Customer risk was explicitly re-centred before the final recommendation.",
+    "Tester confidence improved after the risk acknowledgement.",
+  ]);
+  renderConversation("Risk re-centred");
+  renderAssistant("AI Copilot", [
+    "Good recovery. The room now has a more balanced decision basis.",
+    "Make the recommendation while the trade-off is clear.",
+  ]);
+  renderFeedback("The room feels more balanced again after the risk was re-centred.", () => {
+    renderRecommendationStage({
+      title: "What is your recommendation now?",
+      prompt: "The room has both risk and delivery pressure in view. Make the call.",
+    });
+  });
+}
+
+function renderPathDecision() {
+  const path = resolveMeetingPath();
+  state.meetingContext.path = path;
+
+  if (path === "alignment") {
+    state.stage = "alignmentPath";
+    highlightSpeaker("projectManager");
+    setMeetingStage({
+      tag: "Alignment Path",
+      title: "The room is moving toward alignment.",
+      subtitle: "Structure is holding and the recommendation now matters most.",
+      status: "Alignment building",
+    });
+
+    applyMeetingDelta({ pmMood: "aligned" });
+    syncRoomReactions();
+    addConversationEntries([
+      {
+        speaker: "Emily",
+        text: "We're closer to alignment. What recommendation are you leaning toward?",
+        variant: "stakeholder",
+      },
+    ]);
+    addNotes(["Emily signalled that the room is closer to alignment."]);
+    renderConversation("Alignment path");
+    renderAssistant("AI Copilot", [
+      "The room is ready for a recommendation.",
+      "A controlled release may balance both pressures most credibly.",
+    ]);
+    renderRecommendationStage({
+      title: "The room is ready for your recommendation.",
+      prompt: "Choose the direction you believe this room can align around and defend.",
+    });
+    return;
+  }
+
+  if (path === "riskEscalation") {
+    state.stage = "riskEscalation";
+    highlightSpeaker("projectManager");
+    setMeetingStage({
+      tag: "Risk Escalation",
+      title: "The room is pushing back on unresolved risk.",
+      subtitle: "Risk is dominating, but the room still needs a decision.",
+      status: "Risk pressure high",
+    });
+
+    applyMeetingDelta({ pmMood: "active" });
+    syncRoomReactions();
+    addConversationEntries([
+      {
+        speaker: "James",
+        text:
+          "We're spending a lot of time on risk without deciding whether it's actually release-blocking.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Sarah",
+        text: "Because it could affect customers.",
+        variant: "stakeholder",
+      },
+      {
+        speaker: "Emily",
+        text: "We need to bring this back to a decision.",
+        variant: "stakeholder",
+      },
+    ]);
+    addNotes([
+      "Risk discussion escalated and James pushed for a clearer release-blocking view.",
+    ]);
+    renderConversation("Risk escalation");
+    renderAssistant("AI Copilot", [
+      "Acknowledge delivery pressure before making your call.",
+      "If needed, ask Daniel for one final clarification to sharpen the choice.",
+    ]);
+    scheduleCopilotNudge([
+      "Controlled release can help if you need to acknowledge both sides quickly.",
+      "Delay is defensible if you want to hold the risk line firmly.",
+    ]);
+
+    const options = document.createElement("div");
+    options.className = "option-list";
+
+    [
+      {
+        label: "Acknowledge PO and Recommend Controlled Release",
+        headline:
+          "I hear the delivery pressure. My recommendation is a controlled release with safeguards and close follow-up.",
+        preview: "Best for lowering tension while still respecting risk.",
+        action: () => submitRecommendation("controlled", {
+          hostText:
+            "I hear the delivery pressure. My recommendation is a controlled release with safeguards and close follow-up.",
+        }),
+      },
+      {
+        label: "Hold Firm and Recommend Delay",
+        headline:
+          "Given the unresolved customer-impacting risk, my recommendation is to delay the release.",
+        preview: "Best for protecting users, but it will keep delivery tension high.",
+        action: () => submitRecommendation("delay", {
+          hostText:
+            "Given the unresolved customer-impacting risk, my recommendation is to delay the release.",
+        }),
+      },
+      {
+        label: "Ask for One Last Technical Clarification",
+        headline: "Use Daniel's view to sharpen the final recommendation before you commit.",
+        preview: "Best if you want one more defensible technical anchor before deciding.",
+        action: () => renderTechnicalClarificationStage(),
+      },
+    ].forEach((option) => {
+      options.appendChild(
+        buildOptionButton(option, () => {
+          option.action();
+        })
+      );
+    });
+
+    renderResponseShell({
+      eyebrow: "Decision pressure",
+      title: "How do you move the room toward a call?",
+      prompt:
+        "The tension is high. Choose whether to balance, hold the risk line, or ask for one more technical anchor.",
+      options,
+    });
+    return;
+  }
+
+  state.stage = "deliveryPressure";
+  highlightSpeaker("projectManager");
+  setMeetingStage({
+    tag: "Delivery Pressure",
+    title: "The room is leaning too hard toward the deadline.",
+    subtitle: "Risk now needs more explicit acknowledgement before the recommendation lands.",
+    status: "Delivery pressure high",
+  });
+
+  applyMeetingDelta({ pmMood: "active" });
+  syncRoomReactions();
+  addConversationEntries([
+    {
+      speaker: "Sarah",
+      text: "I need to be clear — I don't think the customer risk has been fully addressed.",
+      variant: "stakeholder",
+    },
+    {
+      speaker: "Daniel",
+      text: "We still need to be precise about what we're accepting.",
+      variant: "stakeholder",
+    },
+    {
+      speaker: "Emily",
+      text: "Can we close the gap before deciding?",
+      variant: "stakeholder",
+    },
+  ]);
+  addNotes([
+    "Sarah and Daniel both signalled that delivery pressure is outrunning risk clarity.",
+  ]);
+  renderConversation("Delivery pressure path");
+  renderAssistant("AI Copilot", [
+    "Risk acknowledgement is needed before recommending release.",
+    "A quick re-centre can improve confidence without losing momentum.",
+  ]);
+  scheduleCopilotNudge([
+    "If you push ahead with release, be prepared for mixed trust.",
+    "Controlled release can still work if you pair it with safeguards.",
+  ]);
+
+  const options = document.createElement("div");
+  options.className = "option-list";
+
+  [
+    {
+      label: "Pause and Re-centre on Risk",
+      headline: "Acknowledge the customer risk before making the final recommendation.",
+      preview: "Best for rebuilding trust before the room commits.",
+      action: () => renderRiskRecentreStage(),
+    },
+    {
+      label: "Push Ahead and Recommend Release",
+      headline: "My recommendation is to proceed with release as planned.",
+      preview: "Keeps momentum, but trust may stay mixed.",
+      action: () =>
+        submitRecommendation("release", {
+          hostText: "My recommendation is to proceed with release as planned.",
+        }),
+    },
+    {
+      label: "Recommend Controlled Release with Safeguards",
+      headline:
+        "My recommendation is a controlled release with clear safeguards and close follow-up.",
+      preview: "Best for balancing risk acknowledgement with delivery momentum.",
+      action: () =>
+        submitRecommendation("controlled", {
+          hostText:
+            "My recommendation is a controlled release with clear safeguards and close follow-up.",
+        }),
+    },
+  ].forEach((option) => {
+    options.appendChild(
+      buildOptionButton(option, () => {
+        option.action();
+      })
+    );
+  });
+
+  renderResponseShell({
+    eyebrow: "Decision pressure",
+    title: "How do you close the gap before the final call?",
+    prompt:
+      "Risk still needs acknowledgement. Decide whether to re-centre, push ahead, or balance both sides with a controlled recommendation.",
+    options,
+  });
+}
+
+function calculateOutcomeScores(recommendationKey) {
+  let trust =
+    54 +
+    state.stakeholderTrust * 5 +
+    state.facilitationScore * 4 -
+    (state.tension - 1) * 6;
+  let risk = 54 - state.riskFocus * 4 + state.tension * 5;
+  let business =
+    48 +
+    state.deliveryFocus * 5 -
+    Math.max(0, state.riskFocus - state.deliveryFocus - 1) * 2;
+
+  if (state.meetingContext.path === "alignment") {
+    trust += 8;
+  }
+
+  if (state.meetingContext.path === "riskEscalation") {
+    trust -= 4;
+    risk += 4;
+  }
+
+  if (state.meetingContext.path === "deliveryPressure") {
+    risk += 6;
+    trust -= 2;
+    business += 4;
+  }
+
+  if (recommendationKey === "release") {
+    trust -= 4;
+    risk += 18;
+    business += 18;
+  }
+
+  if (recommendationKey === "delay") {
+    risk -= 20;
+    business -= 16;
+    trust += 2;
+  }
+
+  if (recommendationKey === "controlled") {
+    trust += 10;
+    risk -= 8;
+    business += 10;
+  }
+
+  return {
+    trust: clampScore(trust),
+    risk: clampScore(risk),
+    business: clampScore(business),
+  };
+}
+
+function submitRecommendation(recommendationKey, overrides = {}) {
+  clearHesitationNudge();
+
+  const recommendationConfig = {
+    release: {
+      hostText: "My recommendation is to proceed with release as planned.",
+      value: "Proceed with release as planned",
+      delta: {
+        deliveryFocus: 2,
+        tension: 1,
+        stakeholderTrust: state.riskFocus < 2 ? -1 : 0,
+        testerMood: "frustrated",
+        poMood: "supported",
+        techLeadMood: "analytical",
+        pmMood: "neutral",
+      },
+      reactions: [
+        { speaker: "James", text: "Good. We need to move.", variant: "stakeholder" },
+        {
+          speaker: "Sarah",
+          text: "I'm not comfortable with that without stronger mitigation.",
+          variant: "stakeholder",
+        },
+        {
+          speaker: "Daniel",
+          text: "We'll need close monitoring if we do this.",
+          variant: "stakeholder",
+        },
+        {
+          speaker: "Emily",
+          text: "Okay, but we need clear actions and ownership.",
+          variant: "stakeholder",
+        },
+      ],
+      notes: [
+        "Recommendation made: proceed with release as planned.",
+        "Mitigation and ownership now matter immediately.",
+      ],
+      assistant: [
+        "Delivery momentum is protected, but the room still carries visible risk.",
+        "Expect mixed alignment and stronger follow-up needs.",
+      ],
+      feedback:
+        "The room has a direction, but confidence is mixed because the unresolved risk is still visible.",
+    },
+    delay: {
+      hostText: "My recommendation is to delay the release until the risk is reduced.",
+      value: "Delay the release",
+      delta: {
+        riskFocus: 2,
+        deliveryFocus: -1,
+        tension: state.poMood === "defensive" ? 1 : 0,
+        testerMood: "supported",
+        poMood: "defensive",
+        techLeadMood: "engaged",
+        pmMood: "active",
+      },
+      reactions: [
+        { speaker: "Sarah", text: "I support that.", variant: "stakeholder" },
+        {
+          speaker: "James",
+          text: "That has real delivery consequences.",
+          variant: "stakeholder",
+        },
+        {
+          speaker: "Daniel",
+          text: "From a risk perspective, that is defensible.",
+          variant: "stakeholder",
+        },
+        {
+          speaker: "Emily",
+          text: "We'll need a communication plan immediately.",
+          variant: "stakeholder",
+        },
+      ],
+      notes: [
+        "Recommendation made: delay the release until risk is reduced.",
+        "Communication planning is now urgent.",
+      ],
+      assistant: [
+        "Risk is materially reduced by this decision.",
+        "Business impact remains visible and will need active management.",
+      ],
+      feedback:
+        "The room accepts the risk rationale, even though delivery consequences are now more pronounced.",
+    },
+    controlled: {
+      hostText:
+        "My recommendation is a controlled release with clear safeguards and close follow-up.",
+      value: "Controlled release",
+      delta: {
+        riskFocus: 1,
+        deliveryFocus: 1,
+        facilitationScore: 2,
+        stakeholderTrust: 2,
+        tension: -1,
+        testerMood: "supported",
+        poMood: "supported",
+        techLeadMood: "engaged",
+        pmMood: "aligned",
+      },
+      reactions: [
+        {
+          speaker: "Sarah",
+          text: "That's more acceptable if the risky areas are contained.",
+          variant: "stakeholder",
+        },
+        {
+          speaker: "James",
+          text: "I can work with that.",
+          variant: "stakeholder",
+        },
+        {
+          speaker: "Daniel",
+          text: "That gives us a technically safer path.",
+          variant: "stakeholder",
+        },
+        {
+          speaker: "Emily",
+          text: "That sounds like the most balanced recommendation.",
+          variant: "stakeholder",
+        },
+      ],
+      notes: [
+        "Recommendation made: controlled release with safeguards and close follow-up.",
+        "The room aligned more strongly around a balanced path.",
+      ],
+      assistant: [
+        "This is the most balanced recommendation for the room.",
+        "It protects delivery momentum while acknowledging the unresolved risk explicitly.",
+      ],
+      feedback:
+        "The room has a more balanced direction now, with stronger alignment around practical safeguards.",
+    },
+  };
+
+  const config = recommendationConfig[recommendationKey];
+
+  if (!config) {
+    return;
+  }
+
+  state.stage = "recommendationCommitted";
+  state.selections.recommendation = config.value;
+  applyMeetingDelta(config.delta);
+  syncRoomReactions({
+    projectManager: { text: "Decision recorded", tone: "positive" },
+  });
+  addConversationEntries([
+    {
+      speaker: getPlayerName(),
+      text: overrides.hostText || config.hostText,
+      variant: "host",
+    },
+    ...config.reactions,
+  ]);
+  addNotes(config.notes);
+  renderConversation("Recommendation shared");
+  renderAssistant("AI Copilot", [
+    ...config.assistant,
+    `Final room tension: ${getTensionText()}.`,
+  ]);
+  state.scores = calculateOutcomeScores(recommendationKey);
+  renderFeedback(config.feedback, () => {
+    renderOutcome();
   });
 }
 
@@ -1406,9 +2681,9 @@ ${greetingName}`;
 function getMeetingParticipants() {
   return [
     stakeholderCards.tester,
-    stakeholderCards.techLead,
     stakeholderCards.productOwner,
     stakeholderCards.projectManager,
+    stakeholderCards.techLead,
   ].filter(Boolean);
 }
 
@@ -1464,55 +2739,18 @@ function runMeetingIntroSequence() {
   meetingIntroTimers.push(
     setTimeout(() => {
       meetingIntroOverlay.classList.remove("is-active");
-      renderKickoffStep();
+      renderOpeningMove();
     }, 2300)
   );
 }
 
 function getManualAssistContext() {
-  if (state.stage === "kickoff") {
-    const step = kickoffSequence[state.currentRound];
-    const meta = kickoffStageMeta[step.id];
-    return {
-      title: "AI Copilot",
-      lines: step.id === "opening" ? assistantKickoff : meta.nudge,
-    };
-  }
-
-  if (state.stage === "speakerSelection") {
-    return {
-      title: "AI Copilot",
-      lines: [
-        "Choose the first speaker based on the tension you want to surface first.",
-        "You will align on the final decision with the Project Manager later in the meeting.",
-      ],
-    };
-  }
-
-  if (state.stage === "discussion") {
-    const currentKey = state.speakerQueue[state.currentRound];
-    return {
-      title: "AI Copilot",
-      lines: currentKey
-        ? discussionContent[currentKey].aiSuggestion.split("\n").slice(1)
-        : assistantKickoff,
-    };
-  }
-
-  if (state.stage === "finalDecision") {
-    return {
-      title: "AI Copilot",
-      lines: [
-        "Summarise the trade-off clearly.",
-        "Connect the recommendation to customer impact, delivery expectations, and risk controls.",
-      ],
-    };
-  }
-
-  return {
-    title: "AI Copilot",
-    lines: assistantKickoff,
-  };
+  return state.lastAssistContext?.lines?.length
+    ? state.lastAssistContext
+    : {
+        title: "AI Copilot",
+        lines: assistantKickoff,
+      };
 }
 
 function resetSimulation({ destination = "landing", preserveName = false } = {}) {
@@ -1532,9 +2770,9 @@ function resetSimulation({ destination = "landing", preserveName = false } = {})
   decisionPanel.innerHTML = "";
   highlightSpeaker("");
   setMeetingStage({
-    tag: "Meeting Kick-Off",
+    tag: "Live Meeting",
     title: "Everyone is looking at you to begin.",
-    subtitle: "Guide the discussion, frame the trade-offs, and use AI support when it helps.",
+    subtitle: "Lead the room, manage the trade-offs, and move the team toward a defensible call.",
     status: "Room coming online",
   });
   updateHostLabels();
@@ -1548,36 +2786,58 @@ function resetSimulation({ destination = "landing", preserveName = false } = {})
 }
 
 function startMeeting() {
+  const baseline = defaultState();
+
   showScreen("meeting");
   resetMeetingRoomVisuals();
-  state.stage = "kickoff";
+  state.stage = "opening";
   state.currentRound = 0;
+  state.tension = baseline.tension;
+  state.testerMood = baseline.testerMood;
+  state.poMood = baseline.poMood;
+  state.techLeadMood = baseline.techLeadMood;
+  state.pmMood = baseline.pmMood;
+  state.stakeholderTrust = baseline.stakeholderTrust;
+  state.riskFocus = baseline.riskFocus;
+  state.deliveryFocus = baseline.deliveryFocus;
+  state.facilitationScore = baseline.facilitationScore;
+  state.meetingContext = { ...baseline.meetingContext };
+  state.scores = { ...baseline.scores };
+  state.reactions = { ...baseline.reactions };
+  state.selections = {
+    ...state.selections,
+    opening: null,
+    recovery: null,
+    followUp: null,
+    framing: null,
+    recommendation: null,
+  };
   state.conversationLog = [
     {
       id: "intro-joined",
-      speaker: "System",
-      text: "All stakeholders have joined the meeting.",
-      variant: "system",
+      speaker: "Emily",
+      text: "All stakeholders have joined.",
+      variant: "stakeholder",
     },
     {
       id: "intro-focus",
-      speaker: "System",
-      text: "Everyone is looking at you to open the discussion.",
+      speaker: "Room",
+      text: "The room is waiting for your opening.",
       variant: "system",
     },
   ];
   state.notes = [
     "Meeting started.",
     "All stakeholders joined.",
-    "Purpose being defined.",
-    "Stakeholders aligned: partial.",
+    "Opening tone not yet set.",
+    "Decision structure still needs to be established.",
   ];
   renderNotes();
-  renderReactions();
+  syncRoomReactions();
   updateTension();
   renderAssistant("AI Copilot", [
-    "Room calibration underway.",
-    "Prepare to set the purpose clearly before the discussion broadens.",
+    "Your opening will shape the tone of the discussion.",
+    "Use structure early if you want the room to align faster.",
   ]);
   setMeetingStage({
     tag: "Mission Arrival",
