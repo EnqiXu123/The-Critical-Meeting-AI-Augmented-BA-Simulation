@@ -1409,7 +1409,10 @@ function renderAnalysisHeader() {
 
   analysisPhaseTag.textContent = "Mission Phase 2";
   analysisTitle.textContent = "Signal Analysis";
-  analysisIntro.textContent = "Review the signals before making a decision.";
+  const enteredName = playerNameInput.value.trim();
+  analysisIntro.textContent = enteredName
+    ? `${enteredName}, please review the signals before making a decision.`
+    : "Please review the signals before making a decision.";
   analysisProgressPill.classList.remove("hidden");
   analysisStateBadge.classList.add("hidden");
 }
