@@ -547,6 +547,20 @@ button:hover *,
   animation: cta-pulse 4.8s ease-in-out infinite;
 }
 
+#analysisScreen .analysis-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 14px 18px;
+  font-size: 0.96rem;
+  white-space: nowrap;
+}
+
+#analysisScreen .analysis-cta:not(:disabled) {
+  animation: cta-pulse 4.8s ease-in-out infinite;
+}
+
 .name-panel {
   display: grid;
   gap: 12px;
@@ -622,6 +636,10 @@ button:hover *,
 
 .hero-cta:hover::before {
   transform: translateX(430%) skewX(-22deg);
+}
+
+.hero-cta:focus-visible {
+  animation: none;
 }
 
 .hero-cta > * {
