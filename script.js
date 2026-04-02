@@ -63,6 +63,7 @@ const insightSteps = Array.from(document.querySelectorAll("[data-insight-step]")
 const analysisSourceCards = Array.from(document.querySelectorAll("[data-source-card]"));
 const traceChips = Array.from(document.querySelectorAll("[data-trace-source]"));
 const summarySegments = Array.from(document.querySelectorAll("[data-summary-card]"));
+const summarySourceNotes = Array.from(document.querySelectorAll(".signal-source-note"));
 
 const stakeholderCards = {
   tester: document.querySelector('[data-stakeholder-card="tester"]'),
@@ -694,6 +695,13 @@ function showTraceSources(sourceIds) {
   traceNote.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
+function resetSummarySourceNotes() {
+  summarySourceNotes.forEach((note) => {
+    note.textContent = "";
+    note.classList.add("hidden");
+  });
+}
+
 function setSummaryMetricsStatic() {
   if (summarySignalsReviewedValue) {
     summarySignalsReviewedValue.textContent = "3/3";
@@ -871,6 +879,7 @@ function renderAnalysisView() {
   summaryPanel.classList.toggle("hidden", !state.aiSummaryShown);
   if (!state.aiSummaryShown) {
     clearSummaryMetricAnimation();
+    resetSummarySourceNotes();
     if (briefingLaunchCard) {
       briefingLaunchCard.classList.remove("hidden");
     }
@@ -1668,6 +1677,7 @@ summariseButton.addEventListener("click", () => {
   state.synthesisStep = 0;
   state.summaryMetricsAnimated = false;
   clearSummaryMetricAnimation();
+  resetSummarySourceNotes();
   renderAnalysisView();
   summaryPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 });
@@ -1702,7 +1712,17 @@ summaryPanel.addEventListener("click", (event) => {
       .map((sourceId) => sourceId.trim())
       .filter(Boolean);
 
-    showTraceSources(sourceIds);
+    const inlineNote = viewSourceButton
+      .closest(".signal-confirmation-actions")
+      ?.querySelector(".signal-source-note");
+    const message = formatSourceTrace(sourceIds);
+
+    if (inlineNote instanceof HTMLElement) {
+      inlineNote.textContent = message;
+      inlineNote.classList.remove("hidden");
+    } else {
+      showTraceSources(sourceIds);
+    }
     return;
   }
 
