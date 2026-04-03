@@ -43,6 +43,7 @@ const meetingStepTag = document.getElementById("meetingStepTag");
 const meetingStageTitle = document.getElementById("stageTitle");
 const meetingStageSubtitle = document.getElementById("meetingStageSubtitle");
 const meetingRoom = document.getElementById("meetingRoom");
+const stakeholderStrip = document.getElementById("stakeholderStrip");
 const meetingIntroOverlay = document.getElementById("meetingIntroOverlay");
 const meetingIntroPrimary = document.getElementById("meetingIntroPrimary");
 const meetingIntroSecondary = document.getElementById("meetingIntroSecondary");
@@ -342,6 +343,20 @@ function renderProgressLabel(screenKey) {
     <span class="phase-icon" aria-hidden="true">&#128752;&#65039;</span>
     ${label}
   `;
+}
+
+function updateStakeholderStripState() {
+  if (!stakeholderStrip) {
+    return;
+  }
+
+  if (!screens.meeting.classList.contains("screen-active")) {
+    stakeholderStrip.classList.remove("is-stuck");
+    return;
+  }
+
+  const stripTop = stakeholderStrip.getBoundingClientRect().top;
+  stakeholderStrip.classList.toggle("is-stuck", stripTop <= 12);
 }
 
 const stakeholderDirectory = {
@@ -1077,6 +1092,7 @@ function showScreen(screenKey) {
   });
   backToBriefingButton?.classList.toggle("hidden", screenKey !== "analysis");
   renderProgressLabel(screenKey);
+  updateStakeholderStripState();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -3444,3 +3460,6 @@ cycleSystemInsights();
 renderProgressLabel("landing");
 initialiseLandingParallax();
 updateSoundToggleUI();
+
+window.addEventListener("scroll", updateStakeholderStripState, { passive: true });
+window.addEventListener("resize", updateStakeholderStripState);
