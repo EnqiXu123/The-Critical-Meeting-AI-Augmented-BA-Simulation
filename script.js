@@ -1383,24 +1383,6 @@ function renderConversation(title, entries = state.conversationLog) {
     conversationFeed.appendChild(article);
   });
 
-  state.typingIndicators.forEach((indicator) => {
-    const typingNode = document.createElement("article");
-    typingNode.className = "conversation-message typing-indicator";
-    if (indicator.key) {
-      typingNode.classList.add(`speaker-${indicator.key}`);
-    }
-    typingNode.innerHTML = `
-      <span class="conversation-speaker">${indicator.speaker}</span>
-      <p>
-        <span class="typing-label">is typing</span>
-        <span class="typing-dots" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-      </p>
-    `;
-    conversationFeed.appendChild(typingNode);
-  });
-
   const promptNode = renderConversationPrompt();
   if (promptNode) {
     conversationFeed.appendChild(promptNode);
