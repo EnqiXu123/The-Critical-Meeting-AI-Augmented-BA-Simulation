@@ -14,9 +14,21 @@
           <h1>The Critical Meeting</h1>
         </div>
         <div class="topbar-meta">
-          <div class="status-pill" id="progressLabel">
-            <span class="phase-icon" aria-hidden="true">&#128752;&#65039;</span>
-            Mission Phase 1: Briefing
+          <div class="topbar-controls">
+            <div class="status-pill" id="progressLabel">
+              <span class="phase-icon" aria-hidden="true">&#128752;&#65039;</span>
+              Mission Phase 1: Briefing
+            </div>
+            <button
+              class="status-pill sound-toggle-button"
+              id="soundToggleButton"
+              type="button"
+              aria-pressed="false"
+              aria-label="Sound: Off"
+              title="Sound: Off"
+            >
+              <span class="sound-toggle-icon" id="soundToggleIcon" aria-hidden="true">&#128263;</span>
+            </button>
           </div>
           <button
             class="secondary-button analysis-topbar-button hidden"
@@ -27,6 +39,8 @@
           </button>
         </div>
       </header>
+
+      <audio id="backgroundMusic" preload="none" aria-hidden="true"></audio>
 
       <main class="app">
         <section class="screen screen-active" id="landingScreen" aria-labelledby="landingTitle">

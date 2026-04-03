@@ -5,7 +5,10 @@ const screens = {
   outcome: document.getElementById("outcomeScreen"),
 };
 
+const backgroundMusic = document.getElementById("backgroundMusic");
 const progressLabel = document.getElementById("progressLabel");
+const soundToggleButton = document.getElementById("soundToggleButton");
+const soundToggleIcon = document.getElementById("soundToggleIcon");
 const nameForm = document.getElementById("nameForm");
 const playerNameInput = document.getElementById("playerName");
 const identityShift = document.getElementById("identityShift");
@@ -159,6 +162,174 @@ let summaryMetricTimers = [];
 let conversationFlowTimers = [];
 let conversationFlowToken = 0;
 let tensionShiftTimer;
+let mediaFadeFrame = 0;
+
+const soundState = {
+  enabled: false,
+  context: null,
+  masterGain: null,
+  suspendTimer: 0,
+};
+
+function updateSoundToggleUI() {
+  if (!soundToggleButton || !soundToggleIcon) {
+    return;
+  }
+
+  const soundLabel = `Sound: ${soundState.enabled ? "On" : "Off"}`;
+  soundToggleButton.setAttribute("aria-pressed", String(soundState.enabled));
+  soundToggleButton.setAttribute("aria-label", soundLabel);
+  soundToggleButton.setAttribute("title", soundLabel);
+  soundToggleIcon.textContent = soundState.enabled ? "🔊" : "🔇";
+}
+
+function getBackgroundTrackSource() {
+  if (!backgroundMusic) {
+    return "";
+  }
+
+  return backgroundMusic.currentSrc || backgroundMusic.getAttribute("src") || "";
+}
+
+function fadeMediaTrack(targetVolume) {
+  if (!backgroundMusic) {
+    return;
+  }
+
+  const startVolume = Number(backgroundMusic.volume || 0);
+  const animationStart = performance.now();
+  const fadeDuration = 900;
+
+  window.cancelAnimationFrame(mediaFadeFrame);
+
+  if (targetVolume > 0) {
+    backgroundMusic.loop = true;
+    backgroundMusic.play().catch(() => {});
+  }
+
+  const animate = (now) => {
+    const progress = Math.min((now - animationStart) / fadeDuration, 1);
+    backgroundMusic.volume = startVolume + (targetVolume - startVolume) * progress;
+
+    if (progress < 1) {
+      mediaFadeFrame = window.requestAnimationFrame(animate);
+      return;
+    }
+
+    if (targetVolume === 0) {
+      backgroundMusic.pause();
+    }
+  };
+
+  mediaFadeFrame = window.requestAnimationFrame(animate);
+}
+
+function createAmbientSoundscape() {
+  if (soundState.context) {
+    return soundState.context;
+  }
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    return null;
+  }
+
+  const context = new AudioContextClass();
+  const masterGain = context.createGain();
+  const filter = context.createBiquadFilter();
+  const shimmerOscillator = context.createOscillator();
+  const shimmerDepth = context.createGain();
+  const padFrequencies = [174.61, 220, 261.63];
+  const padLevels = [0.18, 0.08, 0.05];
+
+  masterGain.gain.value = 0;
+  masterGain.connect(context.destination);
+
+  filter.type = "lowpass";
+  filter.frequency.value = 760;
+  filter.Q.value = 0.5;
+  filter.connect(masterGain);
+
+  padFrequencies.forEach((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const oscillatorGain = context.createGain();
+    const vibrato = context.createOscillator();
+    const vibratoDepth = context.createGain();
+
+    oscillator.type = index === 0 ? "sine" : "triangle";
+    oscillator.frequency.value = frequency;
+    oscillatorGain.gain.value = padLevels[index];
+
+    vibrato.type = "sine";
+    vibrato.frequency.value = 0.035 + index * 0.01;
+    vibratoDepth.gain.value = frequency * 0.008;
+
+    oscillator.connect(oscillatorGain);
+    oscillatorGain.connect(filter);
+
+    vibrato.connect(vibratoDepth);
+    vibratoDepth.connect(oscillator.frequency);
+
+    oscillator.start();
+    vibrato.start();
+  });
+
+  shimmerOscillator.type = "sine";
+  shimmerOscillator.frequency.value = 0.028;
+  shimmerDepth.gain.value = 140;
+  shimmerOscillator.connect(shimmerDepth);
+  shimmerDepth.connect(filter.frequency);
+  shimmerOscillator.start();
+
+  soundState.context = context;
+  soundState.masterGain = masterGain;
+
+  return context;
+}
+
+function fadeAmbientSound(targetGain) {
+  if (!soundState.context || !soundState.masterGain) {
+    return;
+  }
+
+  const now = soundState.context.currentTime;
+  const currentGain = soundState.masterGain.gain.value;
+
+  soundState.masterGain.gain.cancelScheduledValues(now);
+  soundState.masterGain.gain.setValueAtTime(currentGain, now);
+  soundState.masterGain.gain.linearRampToValueAtTime(targetGain, now + 1.1);
+}
+
+function setSoundEnabled(enabled) {
+  soundState.enabled = enabled;
+  updateSoundToggleUI();
+
+  if (soundState.suspendTimer) {
+    window.clearTimeout(soundState.suspendTimer);
+    soundState.suspendTimer = 0;
+  }
+
+  if (getBackgroundTrackSource()) {
+    fadeMediaTrack(enabled ? 0.42 : 0);
+    return;
+  }
+
+  const context = createAmbientSoundscape();
+  if (!context) {
+    return;
+  }
+
+  if (enabled) {
+    context.resume().catch(() => {});
+    fadeAmbientSound(0.18);
+    return;
+  }
+
+  fadeAmbientSound(0);
+  soundState.suspendTimer = window.setTimeout(() => {
+    soundState.context?.suspend().catch(() => {});
+  }, 1200);
+}
 
 function renderProgressLabel(screenKey) {
   let label = missionLabels[screenKey];
@@ -3250,6 +3421,10 @@ aiAssistButton.addEventListener("click", () => {
   setCopilotOpen(!state.copilotOpen);
 });
 
+soundToggleButton?.addEventListener("click", () => {
+  setSoundEnabled(!soundState.enabled);
+});
+
 tryAgainButton.addEventListener("click", () => {
   resetSimulation({ destination: "analysis", preserveName: true });
 });
@@ -3268,3 +3443,4 @@ renderAnalysisView();
 cycleSystemInsights();
 renderProgressLabel("landing");
 initialiseLandingParallax();
+updateSoundToggleUI();

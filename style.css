@@ -112,6 +112,14 @@ button:hover *,
   justify-items: end;
 }
 
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .topbar h1,
 .hero-copy h2,
 .screen-header h2,
@@ -153,6 +161,37 @@ button:hover *,
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
   font-size: 0.96rem;
+}
+
+.sound-toggle-button {
+  justify-content: center;
+  min-width: 64px;
+  padding: 12px 18px;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.sound-toggle-button:hover,
+.sound-toggle-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(127, 231, 220, 0.32);
+  background: rgba(127, 231, 220, 0.12);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  outline: none;
+}
+
+.sound-toggle-button[aria-pressed="true"] {
+  color: var(--accent-strong);
+  border-color: rgba(127, 231, 220, 0.38);
+  background: rgba(127, 231, 220, 0.14);
+}
+
+.sound-toggle-icon {
+  font-size: 1.18rem;
+  line-height: 1;
 }
 
 .phase-icon {
