@@ -46,16 +46,11 @@ const meetingIntroSecondary = document.getElementById("meetingIntroSecondary");
 const conversationTitle = document.getElementById("conversationTitle");
 const conversationFeed = document.getElementById("conversationFeed");
 const decisionPanel = document.getElementById("decisionPanel");
-const meetingMainPanels = document.querySelector(".meeting-main-panels");
-const meetingSidebar = document.querySelector(".meeting-sidebar");
 const assistantPanel = document.getElementById("assistantPanel");
 const assistantHeading = document.getElementById("assistantHeading");
 const assistantContent = document.getElementById("assistantContent");
 const aiAssistButton = document.getElementById("aiAssistButton");
-const aiMeetingNotesButton = document.getElementById("aiMeetingNotesButton");
 const closeCopilotButton = document.getElementById("closeCopilotButton");
-const notesPanel = document.getElementById("notesPanel");
-const closeNotesButton = document.getElementById("closeNotesButton");
 const notesList = document.getElementById("notesList");
 const tensionLabel = document.getElementById("tensionLabel");
 const scoreGrid = document.getElementById("scoreGrid");
@@ -135,10 +130,9 @@ const defaultState = () => ({
   activePrompt: null,
   activeSpeakerKey: "",
   copilotOpen: false,
-  notesOpen: true,
   stageStatus: "Room coming online",
   lastAssistContext: {
-    title: "AI Assist",
+    title: "AI Copilot",
     lines: [],
   },
   meetingContext: {
@@ -234,18 +228,13 @@ const assistantKickoff = [
   "Guide the room toward a recommendation instead of a circular debate.",
 ];
 
-const assistantStandby = [
-  "Make your opening move to unlock contextual guidance.",
-  "AI Assist becomes more useful once the room reacts.",
-];
-
 const openingChoices = [
   {
     id: "structured",
     label: "Structured Opening",
     headline:
       "Let's align first on release readiness, key risks, and the decision we need to make today.",
-    preview: "Calm, structured start.",
+    preview: "Best for calm structure, trust, and lower tension.",
     text:
       "Let's align first on release readiness, key risks, and the decision we need to make today.",
     feedback: "The room settles quickly because your opening gives everyone a shared structure.",
@@ -287,7 +276,7 @@ const openingChoices = [
     id: "quick",
     label: "Quick Check-in",
     headline: "Quick check-in from everyone — how are we looking for release?",
-    preview: "Lighter start, but the room may still need firmer control.",
+    preview: "Faster and lighter, but the room still needs firmer control.",
     text: "Quick check-in from everyone — how are we looking for release?",
     feedback: "The room answers, but it is still looking to you for stronger facilitation.",
     assistant: [
@@ -478,17 +467,16 @@ const challengeRecoveryChoices = [
 
 const followUpPromptCopy = {
   structured: {
-    title: "Different pressures are surfacing. Where do you go next?",
-    prompt:
-      "Sarah, James, and Daniel have each signalled something important. Which voice do you pick up first?",
+    title: "Who do you respond to first?",
+    prompt: "Choose which pressure you want the room to examine first.",
   },
   quick: {
-    title: "The room has answered. How do you take hold of it now?",
-    prompt: "You need to give the discussion firmer direction. What do you say next?",
+    title: "How do you take control of the discussion?",
+    prompt: "The room has spoken. Now decide how you will structure the next part.",
   },
   recovered: {
-    title: "You steadied the tone. What do you say next?",
-    prompt: "Now choose the pressure you want the room to examine more carefully.",
+    title: "How do you steady the room now?",
+    prompt: "You have reset the tone. Choose the pressure you want to surface next.",
   },
 };
 
@@ -917,7 +905,6 @@ function showScreen(screenKey) {
   Object.entries(screens).forEach(([key, screen]) => {
     screen.classList.toggle("screen-active", key === screenKey);
   });
-  document.body.classList.toggle("meeting-mode", screenKey === "meeting");
   backToBriefingButton?.classList.toggle("hidden", screenKey !== "analysis");
   renderProgressLabel(screenKey);
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1060,16 +1047,8 @@ function clearConversationFlow() {
 }
 
 function setMeetingStage({ tag, title, subtitle, status }) {
-  if (meetingStepTag && tag !== undefined) {
-    const hasTag = typeof tag === "string" ? tag.trim().length > 0 : Boolean(tag);
-
-    if (hasTag) {
-      meetingStepTag.textContent = tag;
-      meetingStepTag.hidden = false;
-    } else {
-      meetingStepTag.textContent = "";
-      meetingStepTag.hidden = true;
-    }
+  if (tag) {
+    meetingStepTag.textContent = tag;
   }
   if (title) {
     meetingStageTitle.textContent = title;
@@ -1171,24 +1150,14 @@ function renderConversation(title, entries = state.conversationLog) {
   entries.forEach((entry, index) => {
     const article = document.createElement("article");
     const previousEntry = entries[index - 1];
-    const speakerKey = entry.variant === "host" ? "host" : getSpeakerKey(entry.speaker);
-    const speakerLabel = entry.variant === "host" ? "YOU" : entry.speaker.toUpperCase();
-    const isGrouped =
-      previousEntry &&
-      previousEntry.speaker === entry.speaker &&
-      previousEntry.variant === entry.variant;
+    const speakerLabel =
+      entry.variant === "host" ? `You (${entry.speaker})` : entry.speaker;
     article.className = `conversation-message ${entry.variant}`;
-    if (speakerKey) {
-      article.classList.add(`speaker-${speakerKey}`);
-    }
-    if (isGrouped) {
-      article.classList.add("is-grouped");
-    }
     if (entry.variant === "stakeholder" && previousEntry?.variant === "stakeholder") {
       article.classList.add("is-interrupt");
     }
     article.innerHTML = `
-      ${isGrouped ? "" : `<span class="conversation-speaker">${speakerLabel}</span>`}
+      <span class="conversation-speaker">${speakerLabel}</span>
       <p>${entry.text.replaceAll("\n", "<br><br>")}</p>
     `;
     conversationFeed.appendChild(article);
@@ -1197,13 +1166,10 @@ function renderConversation(title, entries = state.conversationLog) {
   state.typingIndicators.forEach((indicator) => {
     const typingNode = document.createElement("article");
     typingNode.className = "conversation-message typing-indicator";
-    if (indicator.key) {
-      typingNode.classList.add(`speaker-${indicator.key}`);
-    }
     typingNode.innerHTML = `
-      <span class="conversation-speaker">${indicator.speaker.toUpperCase()}</span>
+      <span class="conversation-speaker">${indicator.speaker}</span>
       <p>
-        <span class="typing-label">&#8226;&#8226;&#8226; typing</span>
+        <span class="typing-label">is typing</span>
         <span class="typing-dots" aria-hidden="true">
           <span></span><span></span><span></span>
         </span>
@@ -1212,91 +1178,40 @@ function renderConversation(title, entries = state.conversationLog) {
     conversationFeed.appendChild(typingNode);
   });
 
+  const promptNode = renderConversationPrompt();
+  if (promptNode) {
+    conversationFeed.appendChild(promptNode);
+  }
+
   renderStakeholderActivity();
-  renderDecisionPanel();
   scrollConversationToBottom();
 }
 
-function scheduleCopilotNudge(lines, title = "AI Assist", delay = 4200) {
+function scheduleCopilotNudge(lines, title = "AI Copilot", delay = 4200) {
   clearHesitationNudge();
   hesitationTimer = setTimeout(() => {
     renderAssistant(title, lines);
-    if (hasUserMadeMeetingMove() && !state.copilotOpen) {
+    if (
+      state.tension >= 3 ||
+      ["riskEscalation", "deliveryPressure", "technicalClarification"].includes(state.stage)
+    ) {
+      setCopilotOpen(true);
+    } else {
       aiAssistButton?.classList.add("has-alert");
     }
   }, delay);
 }
 
-function renderResponseShell({ eyebrow, title, prompt, helper, options, delay = 520 }) {
-  const nextPrompt = {
+function renderResponseShell({ eyebrow, title, prompt, helper, options }) {
+  state.activePrompt = {
     eyebrow,
     title,
     prompt,
     helper,
     options: Array.from(options?.children || []),
   };
-
-  if (delay > 0) {
-    state.activePrompt = null;
-    renderConversation(conversationTitle.textContent || "Room feed");
-    const token = conversationFlowToken;
-    const timerId = setTimeout(() => {
-      if (token !== conversationFlowToken) {
-        return;
-      }
-      state.activePrompt = nextPrompt;
-      renderConversation(conversationTitle.textContent || "Room feed");
-    }, delay);
-    conversationFlowTimers.push(timerId);
-    return;
-  }
-
-  state.activePrompt = nextPrompt;
+  decisionPanel.hidden = true;
   renderConversation(conversationTitle.textContent || "Room feed");
-}
-
-function renderDecisionPanel() {
-  decisionPanel.innerHTML = "";
-
-  if (!state.activePrompt?.options?.length) {
-    decisionPanel.hidden = true;
-    meetingMainPanels?.classList.remove("has-response-prompt");
-    return;
-  }
-
-  decisionPanel.hidden = false;
-  meetingMainPanels?.classList.add("has-response-prompt");
-
-  const body = document.createElement("div");
-  body.className = "decision-panel-body";
-
-  const copy = document.createElement("div");
-  copy.className = "decision-panel-copy";
-
-  const copyMarkup = [];
-  if (state.activePrompt.eyebrow) {
-    copyMarkup.push(`<p class="response-eyebrow">${state.activePrompt.eyebrow}</p>`);
-  }
-  if (state.activePrompt.title) {
-    copyMarkup.push(`<h3>${state.activePrompt.title}</h3>`);
-  }
-  if (state.activePrompt.prompt) {
-    copyMarkup.push(`<p>${state.activePrompt.prompt}</p>`);
-  }
-  if (state.activePrompt.helper) {
-    copyMarkup.push(`<p class="helper-text">${state.activePrompt.helper}</p>`);
-  }
-  copy.innerHTML = copyMarkup.join("");
-
-  const actions = document.createElement("div");
-  actions.className = "conversation-choice-list";
-  state.activePrompt.options.forEach((optionNode) => {
-    optionNode.classList.add("conversation-choice-button");
-    actions.appendChild(optionNode);
-  });
-
-  body.append(copy, actions);
-  decisionPanel.appendChild(body);
 }
 
 function waitForConversationStep(ms, token = conversationFlowToken) {
@@ -1630,11 +1545,7 @@ function renderAssistant(title, contentLines) {
     assistantContent.appendChild(li);
   });
 
-  if (
-    !state.copilotOpen &&
-    screens.meeting.classList.contains("screen-active") &&
-    hasUserMadeMeetingMove()
-  ) {
+  if (!state.copilotOpen && screens.meeting.classList.contains("screen-active")) {
     aiAssistButton?.classList.add("has-alert");
   }
 }
@@ -1643,41 +1554,18 @@ function setCopilotOpen(isOpen) {
   state.copilotOpen = isOpen;
   assistantPanel?.classList.toggle("is-open", isOpen);
   aiAssistButton?.classList.toggle("is-open", isOpen);
-  meetingSidebar?.classList.toggle("is-copilot-open", isOpen);
   if (isOpen) {
     aiAssistButton?.classList.remove("has-alert");
   }
 }
 
-function setNotesOpen(isOpen) {
-  state.notesOpen = isOpen;
-  if (notesPanel) {
-    notesPanel.hidden = !isOpen;
-  }
-  meetingSidebar?.classList.toggle("is-notes-open", isOpen);
-  aiMeetingNotesButton?.classList.toggle("is-open", isOpen);
-}
-
-function hasUserMadeMeetingMove() {
-  return Boolean(
-    state.selections.opening ||
-      state.selections.recovery ||
-      state.selections.followUp ||
-      state.selections.framing ||
-      state.selections.recommendation ||
-      state.meetingContext.bridge ||
-      state.meetingContext.path
-  );
-}
-
 function buildOptionButton(option, handler) {
   const button = optionTemplate.content.firstElementChild.cloneNode(true);
-  const dialogueLine = option.text || option.headline || option.label;
-  const cue = option.cue ? `<span class="option-badge">${option.cue}</span>` : "";
+  const headline = option.headline || option.text;
   const preview = option.preview ? `<span class="option-preview">${option.preview}</span>` : "";
   button.innerHTML = `
-    ${cue}
-    <strong>&ldquo;${dialogueLine.replaceAll("\n", "<br>")}&rdquo;</strong>
+    <span class="option-badge">${option.label}</span>
+    <strong>${headline.replaceAll("\n", "<br>")}</strong>
     ${preview}
   `;
   button.addEventListener("click", () => {
@@ -1719,15 +1607,18 @@ function renderOpeningMove() {
   state.activePrompt = null;
   highlightSpeaker("");
   setMeetingStage({
-    tag: "",
+    tag: "Opening Move",
     title: "Everyone is looking at you to begin.",
     subtitle: "Your opening will shape the tone of the room.",
     status: "Awaiting your opening",
   });
 
   renderConversation("Opening beat");
-  renderAssistant("AI Assist", assistantStandby);
-  aiAssistButton?.classList.remove("has-alert");
+  renderAssistant("AI Copilot", assistantKickoff);
+  scheduleCopilotNudge([
+    "You may want to clarify the purpose first.",
+    "A structured opening will help the room settle quickly.",
+  ]);
 
   const options = document.createElement("div");
   options.className = "option-list";
@@ -1752,7 +1643,7 @@ function renderOpeningMove() {
         if (!completed) {
           return;
         }
-        renderAssistant("AI Assist", [
+        renderAssistant("AI Copilot", [
           ...choice.assistant,
           `Tension now: ${getTensionText()}.`,
         ]);
@@ -1769,11 +1660,11 @@ function renderOpeningMove() {
   });
 
   renderResponseShell({
-    eyebrow: "Your move",
-    title: "Everyone is waiting. How do you start?",
-    prompt: "Your first words will shape the tone, trust, and tension in the room.",
+    eyebrow: "How do you open the meeting?",
+    title: "Choose how you want the room to hear you first.",
+    prompt:
+      "This move will influence trust, tension, and how quickly the room aligns around the real issue.",
     options,
-    delay: 680,
   });
 }
 
@@ -1789,7 +1680,7 @@ function renderChallengeRecovery() {
   });
 
   renderConversation("Recovery moment");
-  renderAssistant("AI Assist", [
+  renderAssistant("AI Copilot", [
     "The room felt the challenge sharply.",
     "Recover with balance or pivot into a precise question to regain control.",
   ]);
@@ -1821,7 +1712,7 @@ function renderChallengeRecovery() {
         if (!completed) {
           return;
         }
-        renderAssistant("AI Assist", [
+        renderAssistant("AI Copilot", [
           ...choice.assistant,
           `Tension now: ${getTensionText()}.`,
         ]);
@@ -1843,9 +1734,10 @@ function renderChallengeRecovery() {
   });
 
   renderResponseShell({
-    eyebrow: "Your move",
-    title: "The room is tense. What do you say next?",
-    prompt: "You can steady the tone, press the risk, or pull Daniel in with a more precise question.",
+    eyebrow: "How do you recover or continue?",
+    title: "Decide how you want to handle the tension you just created.",
+    prompt:
+      "This is your chance to either rebalance the room or lean harder into one side of the conflict.",
     options,
   });
 }
@@ -1864,7 +1756,7 @@ function renderFollowUpChoice(mode = "structured") {
   });
 
   renderConversation("Choosing the next signal");
-  renderAssistant("AI Assist", [
+  renderAssistant("AI Copilot", [
     mode === "quick"
       ? "The room still needs stronger structure from you."
       : "Choose the next signal you want the room to examine closely.",
@@ -1895,20 +1787,20 @@ function renderFollowUpChoice(mode = "structured") {
     {
       key: "tester",
       label: choiceLabels.tester,
-      text: "Sarah, walk us through the defect risk first.",
-      preview: "Calm, risk-first move.",
+      headline: "Surface the customer and defect risk first.",
+      preview: "Best for bringing the strongest risk signal into the room immediately.",
     },
     {
       key: "techLead",
       label: choiceLabels.techLead,
-      text: "Daniel, give us your technical read on the release risk.",
-      preview: "Grounds the room in feasibility.",
+      headline: "Bring technical feasibility into the centre of the discussion.",
+      preview: "Best for grounding the room in actual production impact.",
     },
     {
       key: "productOwner",
       label: choiceLabels.productOwner,
-      text: "James, talk us through the delivery pressure if we delay.",
-      preview: "Surfaces commitment pressure early.",
+      headline: "Bring delivery pressure and commitment into the conversation.",
+      preview: "Best for exposing the business consequence of delay early.",
     },
   ].forEach((choice) => {
     options.appendChild(
@@ -1922,7 +1814,7 @@ function renderFollowUpChoice(mode = "structured") {
   });
 
   renderResponseShell({
-    eyebrow: "Your move",
+    eyebrow: "Who do you go to next?",
     title: copy.title,
     prompt: copy.prompt,
     helper: "Project Manager alignment will come later once the room has enough context.",
@@ -1961,7 +1853,7 @@ async function renderFollowUpNode(branchKey) {
   if (!completed) {
     return;
   }
-  renderAssistant("AI Assist", branch.assistant);
+  renderAssistant("AI Copilot", branch.assistant);
   scheduleCopilotNudge(branch.assistant);
 
   const options = document.createElement("div");
@@ -1986,7 +1878,7 @@ async function renderFollowUpNode(branchKey) {
         if (!completed) {
           return;
         }
-        renderAssistant("AI Assist", [
+        renderAssistant("AI Copilot", [
           ...option.assistant,
           `Tension now: ${getTensionText()}.`,
         ]);
@@ -2001,9 +1893,10 @@ async function renderFollowUpNode(branchKey) {
   });
 
   renderResponseShell({
-    eyebrow: "Your move",
-    title: "What do you say next?",
-    prompt: "You can test the risk, surface the delivery consequence, or move the room toward the trade-off.",
+    eyebrow: "What do you do next?",
+    title: "Choose how you guide the room from signal into decision framing.",
+    prompt:
+      "This move decides whether the room stays analytical, becomes more polarised, or starts aligning.",
     options,
   });
 }
@@ -2020,7 +1913,7 @@ function renderFramingChoice() {
   });
 
   renderConversation("Framing the room");
-  renderAssistant("AI Assist", [
+  renderAssistant("AI Copilot", [
     "This is the facilitation moment that shapes the recommendation path.",
     "Choose a stance that shows judgement, not just preference.",
   ]);
@@ -2196,7 +2089,7 @@ function renderFramingChoice() {
         if (!completed) {
           return;
         }
-        renderAssistant("AI Assist", [
+        renderAssistant("AI Copilot", [
           ...assistantLines,
           `Tension now: ${getTensionText()}.`,
         ]);
@@ -2208,9 +2101,10 @@ function renderFramingChoice() {
   });
 
   renderResponseShell({
-    eyebrow: "Your move",
-    title: "What frame do you give the room now?",
-    prompt: "Your next words will decide whether the room aligns, polarises, or sharpens the trade-off.",
+    eyebrow: "Facilitation stance",
+    title: "How do you frame the discussion now?",
+    prompt:
+      "Choose the stance that best helps the room think clearly about the release decision.",
     options,
   });
 }
@@ -2240,7 +2134,7 @@ function resolveMeetingPath() {
 }
 
 function renderRecommendationStage({
-  eyebrow = "Your move",
+  eyebrow = "Your recommendation",
   title = "What is your recommendation?",
   prompt = "The room needs a clear direction before the meeting can close.",
   helper = "Your recommendation will affect stakeholder trust, system risk, and business impact.",
@@ -2256,7 +2150,7 @@ function renderRecommendationStage({
   });
 
   renderConversation("Final recommendation");
-  renderAssistant("AI Assist", [
+  renderAssistant("AI Copilot", [
     "Connect the recommendation to customer impact, delivery consequence, and decision confidence.",
     "The strongest recommendation is the one the room can defend after the meeting ends.",
   ]);
@@ -2347,7 +2241,7 @@ async function renderTechnicalClarificationStage() {
   if (!completed) {
     return;
   }
-  renderAssistant("AI Assist", [
+  renderAssistant("AI Copilot", [
     "That clarification improves decision confidence.",
     "A controlled release is now easier for the room to defend.",
   ]);
@@ -2404,7 +2298,7 @@ async function renderRiskRecentreStage() {
   if (!completed) {
     return;
   }
-  renderAssistant("AI Assist", [
+  renderAssistant("AI Copilot", [
     "Good recovery. The room now has a more balanced decision basis.",
     "Make the recommendation while the trade-off is clear.",
   ]);
@@ -2444,7 +2338,7 @@ async function renderPathDecision() {
     if (!completed) {
       return;
     }
-    renderAssistant("AI Assist", [
+    renderAssistant("AI Copilot", [
       "The room is ready for a recommendation.",
       "A controlled release may balance both pressures most credibly.",
     ]);
@@ -2491,7 +2385,7 @@ async function renderPathDecision() {
     if (!completed) {
       return;
     }
-    renderAssistant("AI Assist", [
+    renderAssistant("AI Copilot", [
       "Acknowledge delivery pressure before making your call.",
       "If needed, ask Daniel for one final clarification to sharpen the choice.",
     ]);
@@ -2539,8 +2433,8 @@ async function renderPathDecision() {
     });
 
     renderResponseShell({
-      eyebrow: "Your move",
-      title: "The tension is high. How do you move the room toward a call?",
+      eyebrow: "Decision pressure",
+      title: "How do you move the room toward a call?",
       prompt:
         "The tension is high. Choose whether to balance, hold the risk line, or ask for one more technical anchor.",
       options,
@@ -2582,7 +2476,7 @@ async function renderPathDecision() {
   if (!completed) {
     return;
   }
-  renderAssistant("AI Assist", [
+  renderAssistant("AI Copilot", [
     "Risk acknowledgement is needed before recommending release.",
     "A quick re-centre can improve confidence without losing momentum.",
   ]);
@@ -2630,8 +2524,8 @@ async function renderPathDecision() {
   });
 
   renderResponseShell({
-    eyebrow: "Your move",
-    title: "The room still feels split. What do you say before the final call?",
+    eyebrow: "Decision pressure",
+    title: "How do you close the gap before the final call?",
     prompt:
       "Risk still needs acknowledgement. Decide whether to re-centre, push ahead, or balance both sides with a controlled recommendation.",
     options,
@@ -2850,7 +2744,7 @@ async function submitRecommendation(recommendationKey, overrides = {}) {
   if (!completed) {
     return;
   }
-  renderAssistant("AI Assist", [
+  renderAssistant("AI Copilot", [
     ...config.assistant,
     `Final room tension: ${getTensionText()}.`,
   ]);
@@ -3043,6 +2937,11 @@ function renderRoomHoldingPattern() {
       variant: "system",
     },
   ]);
+  renderResponseShell({
+    eyebrow: "Mission control",
+    title: "Preparing the room",
+    prompt: "All stakeholders are joining the discussion space.",
+  });
 }
 
 function runMeetingIntroSequence() {
@@ -3078,8 +2977,8 @@ function getManualAssistContext() {
   return state.lastAssistContext?.lines?.length
     ? state.lastAssistContext
     : {
-        title: "AI Assist",
-        lines: assistantStandby,
+        title: "AI Copilot",
+        lines: assistantKickoff,
       };
 }
 
@@ -3096,8 +2995,7 @@ function resetSimulation({ destination = "landing", preserveName = false } = {})
   renderNotes();
   renderReactions();
   setCopilotOpen(false);
-  setNotesOpen(true);
-  renderAssistant("AI Assist", assistantStandby);
+  renderAssistant("AI Copilot", assistantKickoff);
   aiAssistButton?.classList.remove("has-alert");
   updateTension();
   decisionPanel.hidden = true;
@@ -3168,9 +3066,11 @@ function startMeeting() {
   renderNotes();
   syncRoomReactions();
   setCopilotOpen(false);
-  setNotesOpen(true);
   updateTension();
-  renderAssistant("AI Assist", assistantStandby);
+  renderAssistant("AI Copilot", [
+    "Your opening will shape the tone of the discussion.",
+    "Use structure early if you want the room to align faster.",
+  ]);
   aiAssistButton?.classList.remove("has-alert");
   decisionPanel.hidden = true;
   setMeetingStage({
@@ -3346,16 +3246,8 @@ aiAssistButton.addEventListener("click", () => {
   setCopilotOpen(!state.copilotOpen);
 });
 
-aiMeetingNotesButton?.addEventListener("click", () => {
-  setNotesOpen(!state.notesOpen);
-});
-
 closeCopilotButton?.addEventListener("click", () => {
   setCopilotOpen(false);
-});
-
-closeNotesButton?.addEventListener("click", () => {
-  setNotesOpen(false);
 });
 
 tryAgainButton.addEventListener("click", () => {
@@ -3368,7 +3260,7 @@ returnHomeButton.addEventListener("click", () => {
 
 renderReactions();
 setCopilotOpen(false);
-renderAssistant("AI Assist", assistantStandby);
+renderAssistant("AI Copilot", assistantKickoff);
 updateTension();
 updateHostLabels();
 updateIdentityShift();
