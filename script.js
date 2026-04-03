@@ -98,7 +98,7 @@ const analysisSourceLabels = {
 };
 
 const defaultState = () => ({
-  playerName: "Sarah",
+  playerName: "",
   notes: [],
   scores: {
     trust: 50,
@@ -3065,9 +3065,9 @@ function renderOutcome() {
 }
 
 function buildEmail() {
-  const playerName = state.playerName.trim() || "Sarah";
+  const playerName = state.playerName.trim();
   const decision = state.selections.recommendation || "Partial release";
-  const greetingName = playerName;
+  const signOff = playerName ? `\n${playerName}` : "";
 
   return `Subject: Release Decision - Meeting Summary
 
@@ -3087,8 +3087,7 @@ Tech team to provide daily status updates on defect resolution
 Product Owner to communicate updated release scope and timeline impact
 Project Manager to track agreed actions and next checkpoints
 
-Regards,
-${greetingName}`;
+Regards,${signOff}`;
 }
 
 function getMeetingParticipants() {
@@ -3330,7 +3329,7 @@ playerNameInput.addEventListener("input", () => {
 
 nameForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  state.playerName = playerNameInput.value.trim() || "Sarah";
+  state.playerName = playerNameInput.value.trim();
   updateHostLabels();
   renderAnalysisView();
   showScreen("analysis");
