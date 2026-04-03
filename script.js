@@ -154,6 +154,7 @@ const defaultState = () => ({
     recommendation: null,
   },
   aiSummaryShown: false,
+  latestConversationEntryId: "",
 });
 
 let state = defaultState();
@@ -164,7 +165,8 @@ let conversationFlowTimers = [];
 let conversationFlowToken = 0;
 let tensionShiftTimer;
 let mediaFadeFrame = 0;
-const conversationPaceMultiplier = 2;
+let conversationEntrySerial = 0;
+let lastAnimatedConversationEntryId = "";
 
 const soundState = {
   enabled: false,
@@ -1254,7 +1256,13 @@ function addConversationEntry(entry) {
     return;
   }
 
-  state.conversationLog.push(entry);
+  const conversationEntry = {
+    ...entry,
+    _conversationId: `conversation-${++conversationEntrySerial}`,
+  };
+
+  state.latestConversationEntryId = conversationEntry._conversationId;
+  state.conversationLog.push(conversationEntry);
 }
 
 function addConversationEntries(entries) {
@@ -1274,10 +1282,20 @@ function getSpeakerKey(speaker) {
 
 function renderStakeholderActivity() {
   const typingKeys = state.typingIndicators.map((indicator) => indicator.key).filter(Boolean);
+  const focusKey = state.activeSpeakerKey || typingKeys[0] || "";
 
   Object.entries(stakeholderCards).forEach(([key, card]) => {
-    card.classList.toggle("is-speaking", key === state.activeSpeakerKey);
-    card.classList.toggle("is-typing", typingKeys.includes(key));
+    const isPreactive = typingKeys.includes(key);
+    const isActive = key === state.activeSpeakerKey;
+    const isDimmed = Boolean(focusKey) && !isPreactive && !isActive;
+    const isIdle = !isPreactive && !isActive && !isDimmed;
+
+    card.classList.toggle("is-speaking", isActive);
+    card.classList.toggle("is-typing", isPreactive);
+    card.classList.toggle("speaker-active", isActive);
+    card.classList.toggle("speaker-preactive", isPreactive);
+    card.classList.toggle("speaker-dimmed", isDimmed);
+    card.classList.toggle("speaker-idle", isIdle);
   });
 }
 
@@ -1337,11 +1355,26 @@ function renderConversation(title, entries = state.conversationLog) {
   entries.forEach((entry, index) => {
     const article = document.createElement("article");
     const previousEntry = entries[index - 1];
+    const speakerKey = getSpeakerKey(entry.speaker);
     const speakerLabel =
       entry.variant === "host" ? `You (${entry.speaker})` : entry.speaker;
     article.className = `conversation-message ${entry.variant}`;
     if (entry.variant === "stakeholder" && previousEntry?.variant === "stakeholder") {
       article.classList.add("is-interrupt");
+    }
+    if (entry.variant === "stakeholder" && speakerKey) {
+      article.classList.add(`speaker-${speakerKey}`);
+    }
+    if (
+      entry._conversationId &&
+      entry._conversationId === state.latestConversationEntryId &&
+      entry._conversationId !== lastAnimatedConversationEntryId
+    ) {
+      article.classList.add("message-enter");
+      if (entry.variant === "host") {
+        article.classList.add("message-enter-user");
+      }
+      lastAnimatedConversationEntryId = entry._conversationId;
     }
     article.innerHTML = `
       <span class="conversation-speaker">${speakerLabel}</span>
@@ -1353,6 +1386,9 @@ function renderConversation(title, entries = state.conversationLog) {
   state.typingIndicators.forEach((indicator) => {
     const typingNode = document.createElement("article");
     typingNode.className = "conversation-message typing-indicator";
+    if (indicator.key) {
+      typingNode.classList.add(`speaker-${indicator.key}`);
+    }
     typingNode.innerHTML = `
       <span class="conversation-speaker">${indicator.speaker}</span>
       <p>
@@ -1410,8 +1446,42 @@ function waitForConversationStep(ms, token = conversationFlowToken) {
   });
 }
 
-function getConversationDelay(ms) {
-  return Math.round(ms * conversationPaceMultiplier);
+function getConversationPaceFactor() {
+  return {
+    1: 1.08,
+    2: 1,
+    3: 0.88,
+  }[state.tension] || 1;
+}
+
+function getConversationTimings(entry, previousEntry) {
+  const paceFactor = getConversationPaceFactor();
+  const isInterruptStyle =
+    entry.variant === "stakeholder" &&
+    previousEntry?.variant === "stakeholder" &&
+    state.tension >= 2;
+
+  if (entry.variant === "system") {
+    return {
+      pre: Math.round(520 * paceFactor),
+      hold: Math.round(420 * paceFactor),
+      settle: 0,
+    };
+  }
+
+  if (entry.variant === "host") {
+    return {
+      pre: Math.round(180 * paceFactor),
+      hold: Math.round(430 * paceFactor),
+      settle: 0,
+    };
+  }
+
+  return {
+    pre: Math.round((isInterruptStyle ? 280 : 340) * paceFactor),
+    hold: Math.round((isInterruptStyle ? 720 : 940) * paceFactor),
+    settle: Math.round((isInterruptStyle ? 260 : 380) * paceFactor),
+  };
 }
 
 async function playConversationSequence(title, entries) {
@@ -1420,41 +1490,46 @@ async function playConversationSequence(title, entries) {
   setTypingIndicators([]);
   renderConversation(title);
 
-  for (const entry of entries) {
+  for (const [index, entry] of entries.entries()) {
     const speakerKey = getSpeakerKey(entry.speaker);
-    const shouldType = entry.variant !== "system";
+    const previousEntry = entries[index - 1];
+    const timings = getConversationTimings(entry, previousEntry);
 
-    if (shouldType) {
+    if (entry.variant === "stakeholder") {
       setTypingIndicators([{ key: speakerKey, speaker: entry.speaker }]);
-      const keepGoing = await waitForConversationStep(
-        getConversationDelay(entry.variant === "host" ? 260 : 620),
-        token
-      );
+      const keepGoing = await waitForConversationStep(timings.pre, token);
       if (!keepGoing) {
         return false;
       }
-    } else {
-      const keepGoing = await waitForConversationStep(getConversationDelay(180), token);
+    } else if (timings.pre > 0) {
+      const keepGoing = await waitForConversationStep(timings.pre, token);
       if (!keepGoing) {
         return false;
       }
     }
 
-    state.typingIndicators = [];
+    setTypingIndicators([]);
     addConversationEntry(entry);
     highlightSpeaker(speakerKey);
     renderConversation(title);
 
-    const keepGoing = await waitForConversationStep(
-      getConversationDelay(entry.variant === "stakeholder" ? 240 : 160),
-      token
-    );
+    const keepGoing = await waitForConversationStep(timings.hold, token);
     if (!keepGoing) {
       return false;
+    }
+
+    if (entry.variant === "stakeholder" && timings.settle > 0) {
+      highlightSpeaker("");
+      renderStakeholderActivity();
+      const settled = await waitForConversationStep(timings.settle, token);
+      if (!settled) {
+        return false;
+      }
     }
   }
 
   setTypingIndicators([]);
+  highlightSpeaker("");
   return true;
 }
 
@@ -1797,7 +1872,7 @@ function renderFeedback(message, callback) {
     if (token === conversationFlowToken) {
       callback();
     }
-  }, getConversationDelay(900));
+  }, Math.round(960 * getConversationPaceFactor()));
   conversationFlowTimers.push(timerId);
 }
 
@@ -3117,6 +3192,8 @@ function resetMeetingRoomVisuals() {
   meetingIntroSecondary.textContent = "Mission control is preparing the discussion space.";
   conversationTitle.textContent = "Room feed";
   conversationFeed.innerHTML = "";
+  state.latestConversationEntryId = "";
+  lastAnimatedConversationEntryId = "";
   state.activePrompt = null;
   state.activeSpeakerKey = "";
   state.typingIndicators = [];
