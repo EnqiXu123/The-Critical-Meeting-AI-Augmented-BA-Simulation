@@ -164,6 +164,7 @@ let conversationFlowTimers = [];
 let conversationFlowToken = 0;
 let tensionShiftTimer;
 let mediaFadeFrame = 0;
+const conversationPaceMultiplier = 2;
 
 const soundState = {
   enabled: false,
@@ -1409,6 +1410,10 @@ function waitForConversationStep(ms, token = conversationFlowToken) {
   });
 }
 
+function getConversationDelay(ms) {
+  return Math.round(ms * conversationPaceMultiplier);
+}
+
 async function playConversationSequence(title, entries) {
   const token = ++conversationFlowToken;
   state.activePrompt = null;
@@ -1421,12 +1426,15 @@ async function playConversationSequence(title, entries) {
 
     if (shouldType) {
       setTypingIndicators([{ key: speakerKey, speaker: entry.speaker }]);
-      const keepGoing = await waitForConversationStep(entry.variant === "host" ? 260 : 620, token);
+      const keepGoing = await waitForConversationStep(
+        getConversationDelay(entry.variant === "host" ? 260 : 620),
+        token
+      );
       if (!keepGoing) {
         return false;
       }
     } else {
-      const keepGoing = await waitForConversationStep(180, token);
+      const keepGoing = await waitForConversationStep(getConversationDelay(180), token);
       if (!keepGoing) {
         return false;
       }
@@ -1438,7 +1446,7 @@ async function playConversationSequence(title, entries) {
     renderConversation(title);
 
     const keepGoing = await waitForConversationStep(
-      entry.variant === "stakeholder" ? 240 : 160,
+      getConversationDelay(entry.variant === "stakeholder" ? 240 : 160),
       token
     );
     if (!keepGoing) {
@@ -1789,7 +1797,7 @@ function renderFeedback(message, callback) {
     if (token === conversationFlowToken) {
       callback();
     }
-  }, 900);
+  }, getConversationDelay(900));
   conversationFlowTimers.push(timerId);
 }
 
