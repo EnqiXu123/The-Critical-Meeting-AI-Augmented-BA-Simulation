@@ -599,29 +599,6 @@
                 </p>
               </div>
 
-              <button class="meeting-copilot-toggle" id="aiAssistButton" type="button">
-                <span aria-hidden="true">&#128161;</span>
-                AI Assist
-              </button>
-
-              <article class="panel assistant-panel meeting-copilot-panel" id="assistantPanel">
-                <div class="panel-head">
-                  <div>
-                    <p class="section-tag">AI Copilot</p>
-                    <h3 id="assistantHeading">Suggested meeting structure</h3>
-                  </div>
-                  <button class="secondary-button" id="closeCopilotButton" type="button">
-                    Close
-                  </button>
-                </div>
-                <ul class="assistant-list" id="assistantContent">
-                  <li>State purpose</li>
-                  <li>Confirm who is represented in the room</li>
-                  <li>Define the problem</li>
-                  <li>Set the expected outcome</li>
-                </ul>
-              </article>
-
               <div class="meeting-room" id="meetingRoom">
                 <div class="meeting-intro-overlay" id="meetingIntroOverlay" aria-live="polite">
                   <p class="meeting-intro-line" id="meetingIntroPrimary">Connecting the room...</p>
@@ -724,12 +701,42 @@
               </div>
 
               <aside class="meeting-sidebar">
-                <article class="panel notes-panel">
+                <article
+                  class="panel assistant-panel meeting-copilot-panel"
+                  id="assistantPanel"
+                  aria-live="polite"
+                  hidden
+                >
                   <div class="panel-head">
                     <div>
+                      <p class="section-tag">AI Copilot</p>
+                      <h3 id="assistantHeading">Suggested meeting structure</h3>
+                    </div>
+                  </div>
+                  <ul class="assistant-list" id="assistantContent">
+                    <li>State purpose</li>
+                    <li>Confirm who is represented in the room</li>
+                    <li>Define the problem</li>
+                    <li>Set the expected outcome</li>
+                  </ul>
+                </article>
+
+                <article class="panel notes-panel">
+                  <div class="panel-head notes-panel-head">
+                    <div class="panel-head-copy">
                       <p class="section-tag">AI Meeting Notes</p>
                       <h3>Live notes</h3>
                     </div>
+                    <button
+                      class="meeting-copilot-toggle"
+                      id="aiAssistButton"
+                      type="button"
+                      aria-controls="assistantPanel"
+                      aria-expanded="false"
+                    >
+                      <span aria-hidden="true">&#128161;</span>
+                      AI Assist
+                    </button>
                   </div>
                   <ul id="notesList" class="notes-list" aria-live="polite"></ul>
                 </article>

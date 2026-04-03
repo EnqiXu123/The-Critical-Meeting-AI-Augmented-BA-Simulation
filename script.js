@@ -50,7 +50,6 @@ const assistantPanel = document.getElementById("assistantPanel");
 const assistantHeading = document.getElementById("assistantHeading");
 const assistantContent = document.getElementById("assistantContent");
 const aiAssistButton = document.getElementById("aiAssistButton");
-const closeCopilotButton = document.getElementById("closeCopilotButton");
 const notesList = document.getElementById("notesList");
 const tensionLabel = document.getElementById("tensionLabel");
 const scoreGrid = document.getElementById("scoreGrid");
@@ -1553,7 +1552,12 @@ function renderAssistant(title, contentLines) {
 function setCopilotOpen(isOpen) {
   state.copilotOpen = isOpen;
   assistantPanel?.classList.toggle("is-open", isOpen);
+  if (assistantPanel) {
+    assistantPanel.hidden = !isOpen;
+    assistantPanel.setAttribute("aria-hidden", String(!isOpen));
+  }
   aiAssistButton?.classList.toggle("is-open", isOpen);
+  aiAssistButton?.setAttribute("aria-expanded", String(isOpen));
   if (isOpen) {
     aiAssistButton?.classList.remove("has-alert");
   }
@@ -3244,10 +3248,6 @@ aiAssistButton.addEventListener("click", () => {
   const assistContext = getManualAssistContext();
   renderAssistant(assistContext.title, assistContext.lines);
   setCopilotOpen(!state.copilotOpen);
-});
-
-closeCopilotButton?.addEventListener("click", () => {
-  setCopilotOpen(false);
 });
 
 tryAgainButton.addEventListener("click", () => {
