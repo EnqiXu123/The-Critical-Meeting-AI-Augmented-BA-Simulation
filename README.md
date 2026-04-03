@@ -108,7 +108,7 @@ Acceptance intent:
 - The title **The Critical Meeting** is visible on load
 - AI features are clearly highlighted
 - The user can enter their name
-- Clicking **Start Simulation** moves the user to the scenario analysis screen
+- Clicking **Begin Mission** moves the user to the scenario analysis screen
 
 ### FR-02: AI-Assisted Scenario Analysis
 
@@ -238,7 +238,7 @@ Hook the user quickly, explain the simulation, and make AI support feel central 
   - AI-generated meeting notes
   - AI-drafted follow-up email
 - Name entry field
-- Primary CTA: **Start Simulation**
+- Primary CTA: **Begin Mission**
 - Optional animated AI preview panel
 
 **Desired feeling**
@@ -518,32 +518,105 @@ This repository currently contains a front-end-only MVP implemented with plain H
 - HTML
 - CSS
 - Vanilla JavaScript
-- Local SVG placeholder assets for stakeholders
+- Local image assets only
+- No backend
+- No package manager or automated test tooling currently kept in the repo
 
 ### Project Structure
 
 ```text
 .
+├── Astronaut in high-tech space cockpit.png
+├── Meeting room background.png
+├── Meeting room page UX design.png
+├── Product Owner.png
+├── Project Manager.png
+├── Tech Lead.png
+├── Tester.png
 ├── assets/
 │   ├── product-owner-placeholder.svg
 │   ├── project-manager-placeholder.svg
 │   ├── tech-lead-placeholder.svg
 │   └── tester-placeholder.svg
+├── README.md
 ├── index.html
 ├── script.js
 └── style.css
 ```
 
-### Placeholder Stakeholder Images
+### Image Assets
 
-The current build uses local placeholder images for:
+The repo currently contains both:
 
-- Product Owner
-- Project Manager
-- Tech Lead
-- Tester
+- PNG stakeholder portraits used in the meeting room
+- SVG placeholder stakeholder images kept as fallback assets
+- A local astronaut hero image for the landing page
+- A local meeting room background image for Phase 4
 
-These can be replaced later with final character art, headshots, or illustration assets without changing the simulation flow.
+## Agent Handoff
+
+This section is the source of truth for the next agent. The PRD-style sections above capture the original baseline; where the current build differs, follow the guidance below.
+
+### Product Direction To Preserve
+
+- The experience uses a mission-control / spaceship metaphor, but it should stay professional and not feel like a cartoon game.
+- The BA is positioned as the human decision-maker. AI is supportive, not the main actor.
+- The user strongly prefers immersive, cinematic UI over dashboard-like UI.
+- The user is highly visual and often iterates by screenshot. Small layout, brightness, and overlap issues matter.
+
+### Current Build Snapshot
+
+- Landing page CTA is **Begin Mission**.
+- The landing page uses `Astronaut in high-tech space cockpit.png` as the hero image.
+- The landing page right panel is **System Intelligence**.
+- Signal Analysis requires the user to review all 3 source cards before **Use AI to Summarise** unlocks.
+- Source cards stay open after they are clicked.
+- Team Chat uses simple rounded left/right bubbles with no tails.
+- Signal Analysis intro is personalised:
+  - blank name: `Please review the signals before making a decision.`
+  - entered name: `{Name}, please review the signals before making a decision.`
+- AI Summary uses a progressive reveal flow:
+  - `Reveal insight`
+  - then staged `Continue` actions
+  - `View Source` shows inline reference text instead of visible source chips
+- The AI Summary CTA into Phase 4 is **Enter the Meeting**.
+- The Meeting Room uses `Meeting room background.png`.
+- Meeting stakeholder order is fixed left-to-right:
+  - Tester
+  - Product Owner
+  - Project Manager
+  - Tech Lead
+- The old `You / Host` card was intentionally removed.
+
+### Important User Decisions
+
+- Keep `AI-AUGMENTED BA SIMULATION` in the original accent color `#7FE7DC` wherever it appears.
+- Keep the main title bright and high-contrast. Do not use dim opacity, gradient text, or blend effects on the title.
+- Avoid overlapping UI. The user repeatedly calls out collisions between badges, buttons, mood pills, cards, and background imagery.
+- AI Assist should feel secondary and optional, not louder than the main conversation.
+- AI Meeting Notes should stay supportive and lightweight.
+- The meeting should feel less like a quiz and more like a live conversation.
+- The user prefers manual testing and explicitly asked not to keep automated test scaffolding in the repo.
+
+### Known Sensitive Areas
+
+- Meeting-room hero brightness and readability have been revised multiple times. If this area changes again, review it visually.
+- The meeting-room top scene is sensitive to text overlap and clipping.
+- Stakeholder mood pills should sit cleanly below the cards and not cut across avatars or card borders.
+- If older meeting copy such as `Everyone is looking at you to begin.` reappears in a visually dominant way, treat that as likely unwanted unless the user explicitly asks for it.
+
+### File Ownership Guide
+
+- `index.html`: screen structure, copy, buttons, panel order
+- `style.css`: layout, spacing, brightness, overlap fixes, visual hierarchy
+- `script.js`: phase transitions, gating logic, summary reveal flow, meeting interaction state
+
+### Do Not Reintroduce Unless Asked
+
+- Playwright
+- axe-core
+- `package.json` / `package-lock.json`
+- test scaffolding or automated verification setup
 
 ## How to Run Locally
 
