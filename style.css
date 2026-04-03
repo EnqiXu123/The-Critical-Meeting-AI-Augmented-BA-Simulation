@@ -2179,6 +2179,10 @@ input[type="text"]::placeholder {
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
+.meeting-copilot-panel[hidden] {
+  display: none !important;
+}
+
 .meeting-copilot-panel.is-open {
   animation: fade-up 220ms ease;
 }
@@ -2380,6 +2384,11 @@ input[type="text"]::placeholder {
   align-content: start;
 }
 
+.meeting-sidebar-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .conversation-panel,
 .assistant-panel,
 .notes-panel,
@@ -2555,27 +2564,6 @@ input[type="text"]::placeholder {
 
 .assistant-list {
   margin-bottom: 0;
-}
-
-.notes-panel {
-  position: relative;
-}
-
-.notes-panel-head {
-  position: relative;
-  align-items: flex-start;
-  margin-bottom: 22px;
-  padding-right: 156px;
-}
-
-.notes-panel-head .panel-head-copy {
-  min-height: 46px;
-}
-
-.notes-panel-head .meeting-copilot-toggle {
-  position: absolute;
-  top: 0;
-  right: 0;
 }
 
 .notes-list {
@@ -3159,20 +3147,7 @@ input[type="text"]::placeholder {
     padding: 0;
   }
 
-  .notes-panel-head {
-    display: grid;
-    gap: 16px;
-    padding-right: 0;
-  }
-
-  .notes-panel-head .panel-head-copy {
-    min-height: 0;
-  }
-
-  .notes-panel-head .meeting-copilot-toggle {
-    position: relative;
-    top: auto;
-    right: auto;
+  .meeting-sidebar-actions .meeting-copilot-toggle {
     width: 100%;
   }
 
